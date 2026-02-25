@@ -1,11 +1,12 @@
 import os
 import tempfile
-from typing import Optional
+from typing import Literal, Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.core.rag.dependencies import get_rag
 from app.core.rag.chunker import chunk_document
-from app.core.rag.document_parser import DocumentParser, DocumentParserError
+from app.core.rag.parsers import create_parser
+from app.core.rag.parsers.base import DocumentParserError
 from app.schemas.rag import RAGDeleteRequest, RAGDeleteResponse, RAGUploadResponse
 
 router = APIRouter(prefix="/rag", tags=["RAG"])
@@ -14,9 +15,17 @@ router = APIRouter(prefix="/rag", tags=["RAG"])
 @router.post("/upload", response_model=RAGUploadResponse)
 async def upload_document(
     file: UploadFile = File(..., description="PDF file to upload."),
-    vector_index: str = Form(..., description="Collection name / vector index to store documents in."),
-    chunk_size: int = Form(default=1000, ge=100, description="Chunk size in characters."),
+    vector_index: str = Form(
+        ..., description="Collection name / vector index to store documents in."
+    ),
+    chunk_size: int = Form(
+        default=1000, ge=100, description="Chunk size in characters."
+    ),
     chunk_overlap: int = Form(default=200, ge=0, description="Overlap between chunks."),
+    parser_strategy: Literal["quality", "speed"] = Form(
+        default="speed",
+        description="Parser strategy: 'quality' (marker-pdf) or 'speed' (llama-parse).",
+    ),
 ):
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
@@ -28,7 +37,7 @@ async def upload_document(
             tmp.write(content)
             tmp_path = tmp.name
 
-        parser = DocumentParser()
+        parser = create_parser(strategy=parser_strategy)
         raw_corpus, fmt, images = parser.parse(tmp_path)
 
         chunks = chunk_document(
@@ -39,7 +48,9 @@ async def upload_document(
         )
 
         if not chunks:
-            raise HTTPException(status_code=400, detail="No content extracted from the PDF.")
+            raise HTTPException(
+                status_code=400, detail="No content extracted from the PDF."
+            )
 
         rag = get_rag()
         rag.init_db(collection_name=vector_index)

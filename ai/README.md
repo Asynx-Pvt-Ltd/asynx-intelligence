@@ -1,6 +1,7 @@
 ```bash
 OPENAI_API_KEY=sk-proj-
 POSTGRES_URI=
+LLAMA_CLOUD_API_KEY=llx-
 
 ENVIRONMENT=local
 FRONTEND_HOST=http://localhost:5173

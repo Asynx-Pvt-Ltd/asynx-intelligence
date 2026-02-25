@@ -1,4 +1,4 @@
-from typing import Literal, Annotated, Any, List
+from typing import Literal, Annotated, Any, List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import HttpUrl, AnyUrl, BeforeValidator, computed_field
 
@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     POSTGRES_URI: str
 
     OPENAI_API_KEY: str
+    LLAMA_CLOUD_API_KEY: Optional[str] = None
 
     FRONTEND_HOST: str = "http://localhost:5173"
     BACKEND_CORS_ORIGINS: Annotated[List[AnyUrl] | str, BeforeValidator(parse_cors)] = (
