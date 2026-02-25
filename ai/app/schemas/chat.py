@@ -14,10 +14,12 @@ class ChatRequest(BaseModel):
         default=None,
         description="If provided, retrieves RAG context from this collection before generating.",
     )
-    k: int = Field(default=10, ge=1, description="Number of documents to retrieve for RAG.")
+    k: int = Field(
+        default=10, ge=1, description="Number of documents to retrieve for RAG."
+    )
     kwargs: Dict[str, Any] = Field(
         default_factory=dict,
-        description="Additional kwargs passed to the LLM (temperature, max_tokens, etc.).",
+        description="Additional kwargs passed to the LLM (temperature, max_tokens, reasoning_effort, etc.).",
     )
 
 
@@ -25,3 +27,4 @@ class ChatResponse(BaseModel):
     content: str
     model_name: str
     usage: Optional[Dict[str, Any]] = None
+    reasoning_content: Optional[str] = None

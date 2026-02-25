@@ -3,9 +3,9 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from app.core.llm import LLMService
 from app.core.rag.dependencies import get_rag
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.core.llm import LLMService, _extract_reasoning
 
 router = APIRouter(prefix="/chat", tags=["Chat Bot"])
 
@@ -36,13 +36,19 @@ async def stream_chat_response(request: ChatRequest):
 
     async def event_generator():
         try:
-            async for token in LLMService.stream(
+            async for chunk in LLMService.stream(
                 messages=messages_dicts,
                 model_name=request.model_name,
                 rag_context=rag_context,
                 **request.kwargs,
             ):
-                yield f"data: {json.dumps({'token': token})}\n\n"
+                if chunk.content:
+                    yield f"data: {json.dumps({'token': chunk.content})}\n\n"
+
+                reasoning = _extract_reasoning(chunk)
+                if reasoning:
+                    yield f"data: {json.dumps({'reasoning': reasoning})}\n\n"
+
             yield "data: [DONE]\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
@@ -88,4 +94,5 @@ async def get_chat_response(request: ChatRequest):
         content=ai_message.content,
         model_name=request.model_name,
         usage=usage,
+        reasoning_content=_extract_reasoning(ai_message),
     )

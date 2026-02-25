@@ -1,7 +1,13 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.documents import Document
 from typing import Any, AsyncIterator, Dict, List, Optional
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessage,
+    AIMessageChunk,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+)
 
 
 def _to_langchain_messages(
@@ -37,13 +43,34 @@ def _to_langchain_messages(
     return lc_messages
 
 
+def _extract_reasoning(message: AIMessage | AIMessageChunk) -> Optional[str]:
+    reasoning = message.additional_kwargs.get("reasoning_content")
+    if reasoning:
+        return reasoning
+
+    reasoning = message.additional_kwargs.get("reasoning", {})
+    if isinstance(reasoning, dict):
+        return reasoning.get("content")
+    if isinstance(reasoning, str) and reasoning:
+        return reasoning
+
+    return None
+
+
 class LLMService:
 
     @staticmethod
-    def _build_llm(model_name: str, streaming: bool = False, **kwargs: Any) -> ChatOpenAI:
+    def _build_llm(
+        model_name: str, streaming: bool = False, **kwargs: Any
+    ) -> ChatOpenAI:
         from app.core.config import settings
 
-        return ChatOpenAI(model=model_name, streaming=streaming, api_key=settings.OPENAI_API_KEY, **kwargs)
+        return ChatOpenAI(
+            model=model_name,
+            streaming=streaming,
+            api_key=settings.OPENAI_API_KEY,
+            **kwargs,
+        )
 
     @staticmethod
     async def generate(
@@ -62,9 +89,8 @@ class LLMService:
         model_name: str = "gpt-5-mini",
         rag_context: Optional[List[Document]] = None,
         **kwargs: Any,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[AIMessageChunk]:
         llm = LLMService._build_llm(model_name, streaming=True, **kwargs)
         lc_messages = _to_langchain_messages(messages, rag_context)
         async for chunk in llm.astream(lc_messages):
-            if chunk.content:
-                yield chunk.content
+            yield chunk
