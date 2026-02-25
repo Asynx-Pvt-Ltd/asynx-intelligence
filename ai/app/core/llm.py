@@ -41,7 +41,9 @@ class LLMService:
 
     @staticmethod
     def _build_llm(model_name: str, streaming: bool = False, **kwargs: Any) -> ChatOpenAI:
-        return ChatOpenAI(model=model_name, streaming=streaming, **kwargs)
+        from app.core.config import settings
+
+        return ChatOpenAI(model=model_name, streaming=streaming, api_key=settings.OPENAI_API_KEY, **kwargs)
 
     @staticmethod
     async def generate(
