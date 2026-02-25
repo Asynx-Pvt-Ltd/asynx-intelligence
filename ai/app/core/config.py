@@ -1,6 +1,6 @@
 from typing import Literal, Annotated, Any, List
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import HttpUrl, PostgresDsn, AnyUrl, BeforeValidator
+from pydantic import HttpUrl, PostgresDsn, AnyUrl, BeforeValidator, computed_field
 
 
 def parse_cors(v: Any) -> List[str] | str:
@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
     SENTRY_DSN: HttpUrl | None = None
     POSTGRES_URI: PostgresDsn
+
+    OPENAI_API_KEY: str
 
     FRONTEND_HOST: str = "http://localhost:5173"
     BACKEND_CORS_ORIGINS: Annotated[List[AnyUrl] | str, BeforeValidator(parse_cors)] = (

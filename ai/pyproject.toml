@@ -9,8 +9,11 @@ dependencies = [
     "langchain>=1.2.10",
     "langchain-openai>=1.1.9",
     "langchain-postgres>=0.0.17",
+    "langchain-text-splitters>=1.1.1",
     "marker-pdf>=1.10.2",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
+    "python-multipart>=0.0.22",
     "sentry-sdk[fastapi]>=2.53.0",
+    "uvicorn>=0.41.0",
 ]
