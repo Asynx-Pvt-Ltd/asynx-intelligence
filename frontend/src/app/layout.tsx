@@ -1,19 +1,22 @@
-import type React from "react"
-import "./globals.css"
+import { ClerkProvider } from '@clerk/nextjs';
+import type React from 'react';
+import './globals.css';
 
 export const metadata = {
-  title: "Asynx SaaS",
-  description: "Production-ready SaaS template",
-}
+	title: 'Enterprice AI Chatbot',
+	description: 'AI Chatbot for pdf analysis',
+};
 
-export default function RootLayout({
-  children,
+export default async function RootLayout({
+	children,
 }: {
-  children: React.ReactNode
+	children: React.ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  )
+	return (
+		<ClerkProvider>
+			<html lang="en">
+				<body>{children}</body>
+			</html>
+		</ClerkProvider>
+	);
 }
