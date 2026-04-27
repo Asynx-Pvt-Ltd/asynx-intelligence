@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import Navbar from './navbar';
 
 export function LandingPageContent() {
 	return (
 		<main className="min-h-screen">
+			<Navbar />
 			<section className="container mx-auto px-6 py-20 text-center">
 				<h1 className="text-5xl font-bold mb-6">
 					Welcome to Your SaaS Platform
