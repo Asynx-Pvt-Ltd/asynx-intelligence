@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 		vector_index: `tenant_${orgId}`,
 	};
 
-	const upstream = await fetch(`${BACKEND_URL}/chat/stream`, {
+	const upstream = await fetch(`${BACKEND_URL}${API_ENDPOINTS.CHAT.STREAM}`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

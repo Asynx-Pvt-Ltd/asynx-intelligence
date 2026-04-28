@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     LLAMA_CLOUD_API_KEY: Optional[str] = None
 
-    FRONTEND_HOST: str = "http://localhost:5173"
+    FRONTEND_HOST: str = "http://localhost:3000"
     BACKEND_CORS_ORIGINS: Annotated[List[AnyUrl] | str, BeforeValidator(parse_cors)] = (
         []
     )
