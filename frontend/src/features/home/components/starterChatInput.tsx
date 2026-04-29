@@ -2,40 +2,55 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { nanoid } from 'nanoid';
 import { Button } from '@/src/components/ui/button';
 import { Textarea } from '@/src/components/ui/textarea';
 import { useChatStore } from '@/src/stores/chat/chatStore';
 import { ArrowUp } from 'lucide-react';
+import { createConversation } from '@/src/features/chat/lib/chatHistory';
 
 const StarterChatInput = () => {
 	const router = useRouter();
 	const [prompt, setPrompt] = useState('');
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const setPendingPrompt = useChatStore((state) => state.setPendingPrompt);
 
-	const handleSubmit = (e: FormEvent) => {
+	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault();
 
 		const trimmed = prompt.trim();
-		if (!trimmed) return;
+		if (!trimmed || isSubmitting) return;
 
-		const chatId = nanoid();
+		try {
+			setIsSubmitting(true);
 
-		setPendingPrompt(trimmed);
-		router.push(`/chat/${chatId}`);
+			const conversation = await createConversation({
+				title: trimmed.slice(0, 60),
+			});
+
+			setPendingPrompt(trimmed);
+			setPrompt('');
+
+			router.push(`/chat/${conversation.id}`);
+		} catch (error) {
+			console.error('Failed to create conversation:', error);
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="w-full h-full max-w-3xl">
-			<div className="text-center p-5">
+		<form onSubmit={handleSubmit} className="h-full w-full max-w-3xl">
+			<div className="p-5 text-center">
 				<h1 className="text-4xl">Enterprise AI Chatbot</h1>
 			</div>
+
 			<div className="rounded-3xl border bg-background shadow-sm">
 				<Textarea
 					value={prompt}
 					onChange={(e) => setPrompt(e.target.value)}
 					placeholder="Ask anything..."
 					className="min-h-35 resize-none border-0 bg-transparent px-5 py-4 text-base shadow-none focus-visible:ring-0"
+					disabled={isSubmitting}
 				/>
 
 				<div className="flex items-center justify-between px-4 pb-4">
@@ -46,7 +61,7 @@ const StarterChatInput = () => {
 					<Button
 						type="submit"
 						size="icon"
-						disabled={!prompt.trim()}
+						disabled={!prompt.trim() || isSubmitting}
 						className="rounded-full"
 					>
 						<ArrowUp className="h-4 w-4" />

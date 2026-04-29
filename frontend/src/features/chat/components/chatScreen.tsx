@@ -4,6 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/src/stores/chat/chatStore';
 import { streamChatResponse } from '@/src/features/chat/lib/chatStream';
 import type { Message, ChatRequest } from '@/src/features/chat/types/chatTypes';
+import {
+	addConversationMessage,
+	getConversation,
+	mapHistoryToUiMessages,
+} from '../lib/chatHistory';
 
 export default function ChatScreen({ chatId }: { chatId: string }) {
 	const pendingPrompt = useChatStore((state) => state.pendingPrompt);
@@ -11,77 +16,158 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isHydrating, setIsHydrating] = useState(true);
+
 	const initializedRef = useRef(false);
+	const streamRunIdRef = useRef(0);
 
 	useEffect(() => {
-		if (!pendingPrompt || initializedRef.current) return;
+		initializedRef.current = false;
+		streamRunIdRef.current += 1;
+		setMessages([]);
+		setIsHydrating(true);
+	}, [chatId]);
+
+	useEffect(() => {
+		let cancelled = false;
+
+		const hydrate = async () => {
+			try {
+				const convo = await getConversation(chatId);
+				if (!cancelled) {
+					setMessages(mapHistoryToUiMessages(convo.messages ?? []));
+				}
+			} catch {
+				if (!cancelled) {
+					setMessages([]);
+				}
+			} finally {
+				if (!cancelled) {
+					setIsHydrating(false);
+				}
+			}
+		};
+
+		void hydrate();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [chatId]);
+
+	useEffect(() => {
+		if (initializedRef.current) return;
+		if (!pendingPrompt || isHydrating) return;
 
 		initializedRef.current = true;
+		clearPendingPrompt();
+
+		const currentRunId = ++streamRunIdRef.current;
 
 		const bootstrapChat = async () => {
-			const userMessage: Message = {
+			const userMsg: Message = {
 				role: 'user',
 				content: pendingPrompt,
 			};
 
-			const assistantMessage: Message = {
+			const assistantMsg: Message = {
 				role: 'assistant',
 				content: '',
 			};
 
-			setMessages([userMessage, assistantMessage]);
-			clearPendingPrompt();
+			setMessages((prev) => [...prev, userMsg, assistantMsg]);
 			setIsLoading(true);
 
-			const payload: ChatRequest = {
-				messages: [userMessage],
-				model_name: 'gpt-5-mini',
-				k: 5,
-				kwargs: {},
-			};
-
 			try {
-				await streamChatResponse(payload, (token) => {
-					setMessages((prev) => {
-						const next = [...prev];
-						const lastIndex = next.length - 1;
-
-						if (lastIndex >= 0 && next[lastIndex].role === 'assistant') {
-							next[lastIndex] = {
-								...next[lastIndex],
-								content: next[lastIndex].content + token,
-							};
-						}
-
-						return next;
-					});
+				await addConversationMessage(chatId, {
+					role: 'user',
+					content: userMsg.content,
 				});
-			} catch (error) {
+
+				const payload: ChatRequest = {
+					messages: [userMsg],
+					model_name: 'gpt-5-mini',
+					k: 1,
+					kwargs: {},
+				};
+
+				const { fullContent, fullReasoning } = await streamChatResponse(
+					payload,
+					(chunk) => {
+						if (!chunk.token) return;
+						if (streamRunIdRef.current !== currentRunId) return;
+
+						setMessages((prev) => {
+							const lastIndex = prev.length - 1;
+							if (lastIndex < 0) return prev;
+
+							const last = prev[lastIndex];
+							if (last.role !== 'assistant') return prev;
+
+							const updatedAssistant: Message = {
+								...last,
+								content: last.content + chunk.token,
+							};
+
+							return [...prev.slice(0, lastIndex), updatedAssistant];
+						});
+					},
+				);
+
+				if (streamRunIdRef.current !== currentRunId) return;
+
 				setMessages((prev) => {
-					const next = [...prev];
-					const lastIndex = next.length - 1;
+					const lastIndex = prev.length - 1;
+					if (lastIndex < 0) return prev;
 
-					if (lastIndex >= 0 && next[lastIndex].role === 'assistant') {
-						next[lastIndex] = {
-							role: 'assistant',
-							content: 'Something went wrong while fetching the response.',
-						};
-					}
+					const last = prev[lastIndex];
+					if (last.role !== 'assistant') return prev;
 
-					return next;
+					const updatedAssistant: Message = {
+						...last,
+						content: fullContent,
+					};
+
+					return [...prev.slice(0, lastIndex), updatedAssistant];
+				});
+
+				await addConversationMessage(chatId, {
+					role: 'assistant',
+					content: fullContent,
+					reasoning_content: fullReasoning,
+					model_name: 'gpt-5-mini',
+				});
+			} catch {
+				if (streamRunIdRef.current !== currentRunId) return;
+
+				setMessages((prev) => {
+					const lastIndex = prev.length - 1;
+					if (lastIndex < 0) return prev;
+
+					const last = prev[lastIndex];
+					if (last.role !== 'assistant') return prev;
+
+					const updatedAssistant: Message = {
+						...last,
+						content: 'Something went wrong while fetching the response.',
+					};
+
+					return [...prev.slice(0, lastIndex), updatedAssistant];
 				});
 			} finally {
-				setIsLoading(false);
+				if (streamRunIdRef.current === currentRunId) {
+					setIsLoading(false);
+				}
 			}
 		};
 
 		void bootstrapChat();
-	}, [pendingPrompt, clearPendingPrompt]);
+	}, [chatId, pendingPrompt, clearPendingPrompt, isHydrating]);
+
+	if (isHydrating) return <div className="p-6">Loading conversation...</div>;
 
 	return (
 		<div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-6">
-			<div className="text-sm text-muted-foreground">Chat ID: {chatId}</div>
-
 			{messages.map((message, index) => (
 				<div
 					key={`${message.role}-${index}`}

@@ -1,9 +1,13 @@
-import type { ChatRequest, StreamTokenChunk } from '@/src/features/chat/types/chatTypes';
+import type {
+	ChatRequest,
+	StreamResult,
+	StreamTokenChunk,
+} from '@/src/features/chat/types/chatTypes';
 
 export async function streamChatResponse(
 	payload: ChatRequest,
-	onToken: (token: string) => void,
-) {
+	onChunk?: (chunk: { token?: string; reasoning?: string }) => void,
+): Promise<StreamResult> {
 	const response = await fetch('/api/chat/stream', {
 		method: 'POST',
 		headers: {
@@ -24,6 +28,9 @@ export async function streamChatResponse(
 	const reader = response.body.getReader();
 	const decoder = new TextDecoder();
 	let buffer = '';
+
+	let fullContent = '';
+	let fullReasoning = '';
 
 	try {
 		while (true) {
@@ -46,13 +53,18 @@ export async function streamChatResponse(
 					const data = trimmed.slice(5).trim();
 
 					if (data === '[DONE]') {
-						return;
+						return { fullContent, fullReasoning };
 					}
 
 					const parsed = JSON.parse(data) as StreamTokenChunk;
 
 					if (parsed.token) {
-						onToken(parsed.token);
+						fullContent += parsed.token;
+						onChunk?.({ token: parsed.token });
+					}
+					if (parsed.reasoning) {
+						fullReasoning += parsed.reasoning;
+						onChunk?.({ reasoning: parsed.reasoning });
 					}
 				}
 			}
@@ -60,4 +72,5 @@ export async function streamChatResponse(
 	} finally {
 		reader.releaseLock();
 	}
+	return { fullContent, fullReasoning };
 }

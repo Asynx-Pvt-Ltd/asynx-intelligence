@@ -1,23 +1,16 @@
 import { API_ENDPOINTS } from '@/src/constants/api.constants';
+import { requireTenantAuth } from '@/src/lib/verifyTenant';
 import { chatRequestSchema } from '@/src/validations/chat.validator';
-import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import z from 'zod';
 
 const BACKEND_URL = API_ENDPOINTS.BASE_URL;
 
 export async function POST(req: NextRequest) {
-	const { userId, orgId } = await auth();
+	const { error } = await requireTenantAuth();
 
-	if (!userId) {
-		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-	}
-
-	if (!orgId) {
-		return NextResponse.json(
-			{ error: 'No active organization selected' },
-			{ status: 400 },
-		);
+	if (error) {
+		return error;
 	}
 
 	const json = await req.json().catch(() => null);
@@ -33,7 +26,6 @@ export async function POST(req: NextRequest) {
 
 	const payload = {
 		...data,
-		vector_index: `tenant_${orgId}`,
 	};
 
 	const upstream = await fetch(`${BACKEND_URL}${API_ENDPOINTS.CHAT.STREAM}`, {
