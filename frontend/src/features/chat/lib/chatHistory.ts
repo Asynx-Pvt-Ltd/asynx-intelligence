@@ -5,13 +5,57 @@ import { Conversation, HistoryMessage } from '../types/chatHistory';
 
 const API_BASE = API_ENDPOINTS.BASE_URL;
 
-export async function getConversation(
-	conversationId: string,
-): Promise<Conversation> {
-	const res = await fetch(`${API_BASE}/chat/history/${conversationId}`, {
+export async function getConversations(params?: {
+	user_id?: string;
+	org_id?: string;
+	skip?: number;
+	limit?: number;
+}): Promise<Conversation[]> {
+	const searchParams = new URLSearchParams();
+
+	if (params?.user_id) {
+		searchParams.set('user_id', params.user_id);
+	}
+
+	if (params?.org_id) {
+		searchParams.set('org_id', params.org_id);
+	}
+
+	if (typeof params?.skip === 'number') {
+		searchParams.set('skip', String(params.skip));
+	}
+
+	if (typeof params?.limit === 'number') {
+		searchParams.set('limit', String(params.limit));
+	}
+
+	const queryString = searchParams.toString();
+	const url = queryString
+		? `${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}?${queryString}`
+		: `${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}`;
+
+	const res = await fetch(url, {
 		method: 'GET',
 		cache: 'no-store',
 	});
+
+	if (!res.ok) {
+		throw new Error('Failed to fetch conversations');
+	}
+
+	return res.json();
+}
+
+export async function getConversation(
+	conversationId: string,
+): Promise<Conversation> {
+	const res = await fetch(
+		`${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}/${conversationId}`,
+		{
+			method: 'GET',
+			cache: 'no-store',
+		},
+	);
 
 	if (!res.ok) {
 		throw new Error('Failed to fetch conversation');
@@ -25,7 +69,7 @@ export async function createConversation(payload?: {
 	user_id?: string;
 	org_id?: string;
 }) {
-	const res = await fetch(`${API_BASE}/chat/history`, {
+	const res = await fetch(`${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(payload ?? {}),
@@ -53,7 +97,7 @@ export async function addConversationMessage(
 	},
 ) {
 	const res = await fetch(
-		`${API_BASE}/chat/history/${conversationId}/messages`,
+		`${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}/${conversationId}/messages`,
 		{
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },

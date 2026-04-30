@@ -1,46 +1,23 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import Sidebar from '@/src/features/home/components/sidebar';
 import Navbar from '@/src/features/home/components/navbar';
-
-const SIDEBAR_WIDTH = '18rem';
-const SIDEBAR_COLLAPSED_WIDTH = '4rem';
-const NAVBAR_HEIGHT = '4rem';
+import Sidebar from '@/src/features/home/components/sidebar';
+import { useRouter } from 'next/navigation';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
 	const router = useRouter();
 
-	const isSidebarCollapsed = false;
-	const sidebarWidth = isSidebarCollapsed
-		? SIDEBAR_COLLAPSED_WIDTH
-		: SIDEBAR_WIDTH;
-
 	return (
-		<div className="h-screen flex flex-col bg-background">
+		<div className="flex h-screen w-full overflow-hidden bg-background">
 			<Sidebar
-				className="fixed left-0 top-0 z-40 h-screen border-r bg-background"
-				style={{ width: sidebarWidth }}
+				className="shrink-0 transition-[width] duration-300 ease-in-out"
 				onNewChat={() => router.push('/')}
 			/>
 
-			<Navbar
-				className="fixed top-0 right-0 z-30 border-b bg-background/95 backdrop-blur"
-				style={{
-					left: sidebarWidth,
-					height: NAVBAR_HEIGHT,
-				}}
-			/>
-
-			<main
-				className="flex-1 min-h-0 overflow-y-auto"
-				style={{
-					marginLeft: sidebarWidth,
-					marginTop: NAVBAR_HEIGHT,
-				}}
-			>
-				{children}
-			</main>
+			<div className="flex flex-1 flex-col min-w-0">
+				<Navbar className="sticky top-0 z-30 h-16 border-b bg-background/95 backdrop-blur" />
+				<main className="flex-1 overflow-y-auto">{children}</main>
+			</div>
 		</div>
 	);
 }
