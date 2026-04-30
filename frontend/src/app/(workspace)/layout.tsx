@@ -1,5 +1,7 @@
-const Layout = () => {
-	return <div>Layout</div>;
+import React from 'react';
+
+const WorkspaceLayout = ({ children }: { children: React.ReactNode }) => {
+	return <div>{children}</div>;
 };
 
-export default Layout;
+export default WorkspaceLayout;
