@@ -22,4 +22,10 @@ export interface ChatResponse {
 
 export interface StreamTokenChunk {
 	token: string;
+	reasoning: string;
+}
+
+export interface StreamResult {
+	fullContent: string;
+	fullReasoning: string;
 }

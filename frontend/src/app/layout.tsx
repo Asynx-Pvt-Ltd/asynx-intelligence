@@ -4,6 +4,7 @@ import './globals.css';
 import { Noto_Sans, Playfair_Display } from 'next/font/google';
 import { cn } from '@/src/lib/utils';
 import { ThemeProvider } from '../components/providers/themeProvider';
+import Navbar from '../features/home/components/navbar';
 
 const playfairDisplayHeading = Playfair_Display({
 	subsets: ['latin'],
@@ -40,7 +41,10 @@ export default async function RootLayout({
 						enableSystem
 						disableTransitionOnChange
 					>
-						{children}
+						<>
+							<Navbar />
+							{children}
+						</>
 					</ThemeProvider>
 				</body>
 			</html>

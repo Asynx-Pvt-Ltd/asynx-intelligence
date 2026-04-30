@@ -17,7 +17,7 @@ class ChatRequest(BaseModel):
         description="If provided, retrieves RAG context from this collection before generating.",
     )
     k: int = Field(
-        default=10, ge=1, description="Number of documents to retrieve for RAG."
+        default=10, ge=0, description="Number of documents to retrieve for RAG."
     )
     kwargs: Dict[str, Any] = Field(
         default_factory=dict,
