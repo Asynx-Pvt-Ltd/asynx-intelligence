@@ -14,5 +14,3 @@ export const chatRequestSchema = z.object({
 	k: z.number().int().min(1).max(20).default(10),
 	kwargs: z.record(z.string(), z.unknown()).default({}),
 });
-
-export type ChatRequest = z.infer<typeof chatRequestSchema>;
