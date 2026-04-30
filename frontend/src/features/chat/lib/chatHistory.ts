@@ -3,36 +3,10 @@ import { API_ENDPOINTS } from '@/src/constants/api.constants';
 import type { Message } from '@/src/features/chat/types/chatTypes';
 import { Conversation, HistoryMessage } from '../types/chatHistory';
 
-const API_BASE = API_ENDPOINTS.BASE_URL;
+const API_BASE = API_ENDPOINTS.NEXT_URL;
 
-export async function getConversations(params?: {
-	user_id?: string;
-	org_id?: string;
-	skip?: number;
-	limit?: number;
-}): Promise<Conversation[]> {
-	const searchParams = new URLSearchParams();
-
-	if (params?.user_id) {
-		searchParams.set('user_id', params.user_id);
-	}
-
-	if (params?.org_id) {
-		searchParams.set('org_id', params.org_id);
-	}
-
-	if (typeof params?.skip === 'number') {
-		searchParams.set('skip', String(params.skip));
-	}
-
-	if (typeof params?.limit === 'number') {
-		searchParams.set('limit', String(params.limit));
-	}
-
-	const queryString = searchParams.toString();
-	const url = queryString
-		? `${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}?${queryString}`
-		: `${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}`;
+export async function getConversations(): Promise<Conversation[]> {
+	const url = `${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}`;
 
 	const res = await fetch(url, {
 		method: 'GET',
@@ -64,11 +38,7 @@ export async function getConversation(
 	return res.json();
 }
 
-export async function createConversation(payload?: {
-	title?: string;
-	user_id?: string;
-	org_id?: string;
-}) {
+export async function createConversation(payload: { title: string }) {
 	const res = await fetch(`${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
