@@ -66,11 +66,9 @@ def get_conversation(
     """
     Retrieve a conversation with its messages.
     """
-    print("Conversation id :",conversation_id)
     conversation = ChatHistoryService.get_conversation_with_messages(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
-    # Convert to schema with messages (relationship already loaded)
     return conversation
 
 
