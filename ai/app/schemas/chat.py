@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Literal, Optional
+from uuid import UUID
+from datetime import datetime
 
 
 class Message(BaseModel):
@@ -28,3 +30,53 @@ class ChatResponse(BaseModel):
     model_name: str
     usage: Optional[Dict[str, Any]] = None
     reasoning_content: Optional[str] = None
+
+
+# ========== Chat History Schemas ==========
+
+class ConversationBase(BaseModel):
+    title: Optional[str] = None
+    user_id: Optional[str] = None
+    org_id: Optional[str] = None
+
+
+class ConversationCreate(ConversationBase):
+    pass
+
+
+class ConversationUpdate(BaseModel):
+    title: Optional[str] = None
+
+
+class Conversation(ConversationBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ConversationMessageBase(BaseModel):
+    role: Literal["system", "user", "assistant"]
+    content: str
+    model_name: Optional[str] = None
+    reasoning_content: Optional[str] = None
+    usage: Optional[Dict[str, Any]] = None
+
+
+class ConversationMessageCreate(ConversationMessageBase):
+    conversation_id: UUID
+
+
+class ConversationMessage(ConversationMessageBase):
+    id: UUID
+    conversation_id: UUID
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ConversationWithMessages(Conversation):
+    messages: List[ConversationMessage] = []

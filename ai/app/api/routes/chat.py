@@ -7,6 +7,9 @@ from app.core.rag.dependencies import get_rag
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.core.llm import LLMService, _extract_reasoning
 
+# Chat history sub‑router
+from app.api.routes import chat_history
+
 router = APIRouter(prefix="/chat", tags=["Chat Bot"])
 
 
@@ -96,3 +99,7 @@ async def get_chat_response(request: ChatRequest):
         usage=usage,
         reasoning_content=_extract_reasoning(ai_message),
     )
+
+
+# Include chat history sub‑router
+router.include_router(chat_history.router)
