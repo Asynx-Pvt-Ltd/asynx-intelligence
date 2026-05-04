@@ -9,6 +9,6 @@ export const API_ENDPOINTS = {
 
 	RAG: {
 		UPLOAD: '/rag/upload',
-		DELETE_FILE: `/rag/delete`,
+		DELETE: `/rag/delete`,
 	},
 } as const;

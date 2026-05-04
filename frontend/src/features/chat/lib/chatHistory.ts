@@ -1,4 +1,3 @@
-// src/features/chat/lib/chatHistoryApi.ts
 import { API_ENDPOINTS } from '@/src/constants/api.constants';
 import type { Message } from '@/src/features/chat/types/chatTypes';
 import { Conversation, HistoryMessage } from '../types/chatHistory';

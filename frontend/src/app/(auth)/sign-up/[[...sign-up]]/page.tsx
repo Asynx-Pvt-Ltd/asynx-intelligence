@@ -4,7 +4,7 @@ import { SignUp } from '@clerk/nextjs';
 export default function Page() {
 	return (
 		<AuthWrapper>
-			<SignUp path="/sign-up" />;
+			<SignUp path="/sign-up" />
 		</AuthWrapper>
 	);
 }
