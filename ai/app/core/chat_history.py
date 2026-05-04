@@ -153,11 +153,20 @@ class ChatHistoryService:
         """
         Retrieve a conversation with its messages eagerly loaded.
         """
-        return (
-            db.query(Conversation)
-            .filter(Conversation.id == conversation_id)
-            .options(
-                # lazy load messages (relationship already defined)
-            )
-            .first()
+        
+        conversation = (
+        db.query(Conversation)
+        .filter(Conversation.id == conversation_id)
+        .first()
         )
+        if not conversation:
+           return None
+
+        conversation.messages = (
+          db.query(ConversationMessage)
+          .filter(ConversationMessage.conversation_id == conversation_id)
+          .order_by(ConversationMessage.created_at.asc(), ConversationMessage.id.asc())
+          .all()
+        )
+
+        return conversation
