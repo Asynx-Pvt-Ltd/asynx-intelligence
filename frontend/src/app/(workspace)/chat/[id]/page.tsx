@@ -7,5 +7,9 @@ export default async function ChatPage({
 }) {
 	const { id } = await params;
 
-	return <ChatScreen chatId={id} />;
+	return (
+		<div className="h-full">
+			<ChatScreen chatId={id} />
+		</div>
+	);
 }

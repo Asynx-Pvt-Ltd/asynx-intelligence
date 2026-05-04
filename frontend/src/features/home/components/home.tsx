@@ -1,12 +1,10 @@
-import StarterChatInput from './starterChatInput';
-import StarterChatWrapper from './starterChatWrapper';
+import StarterChatInput from '../../chat/components/starterChatInput';
+import StarterChatWrapper from '../../chat/components/starterChatWrapper';
 
 export function Home() {
 	return (
-		<main className="min-h-screen space-y-5">
-			<StarterChatWrapper>
-				<StarterChatInput />
-			</StarterChatWrapper>
-		</main>
+		<StarterChatWrapper>
+			<StarterChatInput />
+		</StarterChatWrapper>
 	);
 }

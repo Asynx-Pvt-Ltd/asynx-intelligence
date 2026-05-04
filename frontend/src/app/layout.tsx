@@ -1,10 +1,10 @@
-import { ClerkProvider } from '@clerk/nextjs';
-import type React from 'react';
-import './globals.css';
-import { Noto_Sans, Playfair_Display } from 'next/font/google';
 import { cn } from '@/src/lib/utils';
+import { ClerkProvider } from '@clerk/nextjs';
+import { Noto_Sans, Playfair_Display } from 'next/font/google';
+import type React from 'react';
+import AppShell from '../components/layout/appShell';
 import { ThemeProvider } from '../components/providers/themeProvider';
-import Navbar from '../features/home/components/navbar';
+import './globals.css';
 
 const playfairDisplayHeading = Playfair_Display({
 	subsets: ['latin'],
@@ -41,10 +41,7 @@ export default async function RootLayout({
 						enableSystem
 						disableTransitionOnChange
 					>
-						<>
-							<Navbar />
-							{children}
-						</>
+						<AppShell>{children}</AppShell>
 					</ThemeProvider>
 				</body>
 			</html>
