@@ -4,7 +4,7 @@ import { chatRequestSchema } from '@/src/validations/chat.validator';
 import { NextRequest, NextResponse } from 'next/server';
 import z from 'zod';
 
-const BACKEND_URL = API_ENDPOINTS.BASE_URL;
+const BACKEND_URL = API_ENDPOINTS.SERVER_URL;
 
 export async function POST(req: NextRequest) {
 	const { error } = await requireTenantAuth();

@@ -2,7 +2,6 @@ import { cn } from '@/src/lib/utils';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Noto_Sans, Playfair_Display } from 'next/font/google';
 import type React from 'react';
-import AppShell from '../components/layout/appShell';
 import { ThemeProvider } from '../components/providers/themeProvider';
 import './globals.css';
 
@@ -41,7 +40,7 @@ export default async function RootLayout({
 						enableSystem
 						disableTransitionOnChange
 					>
-						<AppShell>{children}</AppShell>
+						{children}
 					</ThemeProvider>
 				</body>
 			</html>

@@ -35,9 +35,9 @@ class ChatResponse(BaseModel):
 # ========== Chat History Schemas ==========
 
 class ConversationBase(BaseModel):
-    title: Optional[str] = None
-    user_id: Optional[str] = None
-    org_id: Optional[str] = None
+    title:str
+    user_id: str
+    org_id: str
 
 
 class ConversationCreate(ConversationBase):

@@ -2,7 +2,7 @@ import { API_ENDPOINTS } from '@/src/constants/api.constants';
 import { requireTenantAuth } from '@/src/lib/verifyTenant';
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = API_ENDPOINTS.BASE_URL;
+const BACKEND_URL = API_ENDPOINTS.SERVER_URL;
 
 export async function GET(req: NextRequest) {
 	const { userId, orgId, error } = await requireTenantAuth();
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 	const json = await req.json().catch(() => ({}));
 
 	const payload = {
-		title: json?.title ?? 'New Chat',
+		title: json.title ?? 'New Chat',
 		user_id: userId,
 		org_id: orgId,
 	};

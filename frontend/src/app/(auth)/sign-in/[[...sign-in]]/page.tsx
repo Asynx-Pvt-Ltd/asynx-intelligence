@@ -4,7 +4,7 @@ import { SignIn } from '@clerk/nextjs';
 export default function Page() {
 	return (
 		<AuthWrapper>
-			<SignIn path="/sign-in" />;
+			<SignIn path="/sign-in" />
 		</AuthWrapper>
 	);
 }

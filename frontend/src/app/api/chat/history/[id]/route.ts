@@ -2,7 +2,7 @@ import { API_ENDPOINTS } from '@/src/constants/api.constants';
 import { requireTenantAuth } from '@/src/lib/verifyTenant';
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = API_ENDPOINTS.BASE_URL;
+const BACKEND_URL = API_ENDPOINTS.SERVER_URL;
 
 type RouteContext = {
 	params: Promise<{
