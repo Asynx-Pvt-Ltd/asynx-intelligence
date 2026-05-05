@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, String, DateTime, ForeignKey, JSON, Text
+from sqlalchemy import Column, String, DateTime, ForeignKey, JSON, Text, ARRAY, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -16,8 +16,14 @@ class Conversation(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     title = Column(String(255), nullable=False)
+    
     user_id = Column(String(255), nullable=False, index=True)
     org_id = Column(String(255), nullable=False, index=True)
+    
+    vector_index = Column(String(255), nullable=True, index=True)
+    document_ids = Column(ARRAY(String), nullable=True)
+    is_draft = Column(Boolean, default=True, nullable=False, index=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -34,6 +40,7 @@ class ConversationMessage(Base):
     conversation_id = Column(UUID(as_uuid=True), ForeignKey("chat_conversations.id", ondelete="CASCADE"), nullable=False, index=True)
     role = Column(String(50), nullable=False)  # "system", "user", "assistant"
     content = Column(Text, nullable=False)
+    attached_files = Column(JSON, nullable=True)
     model_name = Column(String(255), nullable=True)
     reasoning_content = Column(Text, nullable=True)
     usage = Column(JSON, nullable=True)  # stores token usage as JSONB
