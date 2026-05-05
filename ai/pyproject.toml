@@ -19,4 +19,5 @@ dependencies = [
     "uvicorn>=0.41.0",
     "llama-parse>=0.6.94",
     "psycopg2-binary>=2.9.12",
+    "alembic>=1.18.4",
 ]
