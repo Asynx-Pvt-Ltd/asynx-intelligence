@@ -116,6 +116,11 @@ class ChatHistoryService:
             conversation_id=message_in.conversation_id,
             role=message_in.role,
             content=message_in.content,
+            attached_files=(
+                [f.model_dump() for f in (message_in.attached_files or [])]
+                if message_in.attached_files
+                else None
+            ),
             model_name=message_in.model_name,
             reasoning_content=message_in.reasoning_content,
             usage=message_in.usage,
@@ -170,3 +175,24 @@ class ChatHistoryService:
         )
 
         return conversation
+
+    @staticmethod
+    def update_conversation_rag(
+        db: Session,
+        conversation_id: UUID,
+        vector_index: str,
+        document_ids: List[str],
+    ) -> Optional[Conversation]:
+        """
+        Update RAG metadata (vector_index and document_ids) for a conversation.
+        """
+        db_conversation = ChatHistoryService.get_conversation(db, conversation_id)
+        if not db_conversation:
+            return None
+        
+        db_conversation.vector_index = vector_index
+        db_conversation.document_ids = document_ids
+        db.add(db_conversation)
+        db.commit()
+        db.refresh(db_conversation)
+        return db_conversation
