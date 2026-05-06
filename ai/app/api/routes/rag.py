@@ -26,10 +26,13 @@ async def upload_document(
     org_id: str = Form(
         ..., description="Org id is required."
     ),
-    chunk_size: int = Form(
-        default=1000, ge=100, description="Chunk size in characters."
+    conversation_id: str = Form(
+        ..., description="Conversation ID to associate with this upload."
     ),
-    chunk_overlap: int = Form(default=200, ge=0, description="Overlap between chunks."),
+    chunk_size: int = Form(
+        default=500, ge=100, description="Chunk size in characters."
+    ),
+    chunk_overlap: int = Form(default=50, ge=0, description="Overlap between chunks."),
     parser_strategy: Literal["quality", "speed"] = Form(
         default="speed",
         description="Parser strategy: 'quality' (marker-pdf) or 'speed' (llama-parse).",
@@ -40,19 +43,27 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
     
-    # Create a draft conversation
-    conversation_data = ConversationCreate(
-        title="Draft conversation",
-        user_id=user_id,
-        org_id=org_id,
-        is_draft=True,
-        vector_index=None,
-        document_ids=[]
-    )
-    
-    conversation = ChatHistoryService.create_conversation(db, conversation_data)
-    
-    # Generate new vector index with conversation ID
+    # Use existing conversation or create a new draft conversation
+    conversation = None
+    if conversation_id:
+        try:
+            conv_uuid = UUID(conversation_id)
+            conversation = ChatHistoryService.get_conversation(db, conv_uuid)
+            if not conversation:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Conversation {conversation_id} not found"
+                )
+            # Ensure the conversation belongs to the same user and org
+            if conversation.user_id != user_id or conversation.org_id != org_id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Conversation does not belong to the authenticated user/org"
+                )
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid conversation ID format")
+
+    # Generate vector index with conversation ID
     new_vector_index = f"org_{org_id}_conv_{conversation.id}"
     
     tmp_path: Optional[str] = None
@@ -86,7 +97,6 @@ async def upload_document(
             db,
             conversation.id,
             vector_index=new_vector_index,
-            document_ids=doc_ids
         )
 
         return RAGUploadResponse(
@@ -107,6 +117,7 @@ async def upload_document(
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
+
 
 
 @router.delete("/delete", response_model=RAGDeleteResponse)
@@ -138,21 +149,23 @@ async def delete_documents(
             # Get the conversation
             conversation = ChatHistoryService.get_conversation(db, conversation_id)
             if conversation:
-                # Remove deleted document_ids from conversation's document_ids
-                current_doc_ids = conversation.document_ids or []
-                updated_doc_ids = [doc_id for doc_id in current_doc_ids if doc_id not in request.document_ids]
-                
-                # Update conversation with new document_ids
+                # Update conversation's vector_index (document_ids are no longer stored)
                 ChatHistoryService.update_conversation_rag(
                     db,
                     conversation_id,
                     vector_index=conversation.vector_index,
-                    document_ids=updated_doc_ids
+                    document_ids=[]  # ignored by service
                 )
                 
                 # Check if conversation is empty draft and should be cleaned up
+                # Since we no longer track document_ids, we check if there are any messages
+                # If the conversation has no messages, it's safe to delete.
+                from app.models.chat import ConversationMessage
+                message_count = db.query(ConversationMessage).filter(
+                    ConversationMessage.conversation_id == conversation_id
+                ).count()
                 if (conversation.is_draft and
-                    not updated_doc_ids and
+                    message_count == 0 and
                     conversation.vector_index == request.vector_index):
                     # Delete the conversation
                     ChatHistoryService.delete_conversation(db, conversation_id)
@@ -165,3 +178,4 @@ async def delete_documents(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Delete failed: {e}")
+
