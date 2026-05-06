@@ -1,13 +1,27 @@
 'use client';
 
-import { FormEvent, KeyboardEvent, useState } from 'react';
 import { ArrowUp } from 'lucide-react';
+import { FormEvent, KeyboardEvent, useMemo, useState } from 'react';
+
 import { Button } from '@/src/components/ui/button';
 import { Textarea } from '@/src/components/ui/textarea';
 import { cn } from '@/src/lib/utils';
 
+import { useUploadStore } from '@/src/stores/document/uploadStore';
+import {
+	DocumentUploader,
+	type UploadingFile,
+} from '../../documents/components/documentUploader';
+import UploadFileList from '../../documents/components/uploadFileList';
+
+type ChatSubmitPayload = {
+	prompt: string;
+	files: UploadingFile[];
+};
+
 interface ChatInputProps {
-	onSubmit: (value: string) => Promise<void> | void;
+	onSubmit: (payload: ChatSubmitPayload) => Promise<void> | void;
+	onFilesSelected: (files: File[]) => void;
 	placeholder?: string;
 	disabled?: boolean;
 	isSubmitting?: boolean;
@@ -19,6 +33,7 @@ interface ChatInputProps {
 const ChatInput = ({
 	onSubmit,
 	placeholder = 'Ask anything...',
+	onFilesSelected,
 	disabled = false,
 	isSubmitting = false,
 	header,
@@ -27,8 +42,22 @@ const ChatInput = ({
 }: ChatInputProps) => {
 	const [prompt, setPrompt] = useState(defaultValue);
 
+	const { files, removeFile } = useUploadStore((s) => s);
+
 	const trimmed = prompt.trim();
-	const isDisabled = disabled || isSubmitting || !trimmed;
+
+	const hasUploadingFile = useMemo(
+		() => files.some((file) => file.status === 'uploading'),
+		[files],
+	);
+
+	const hasErroredFile = useMemo(
+		() => files.some((file) => file.status === 'error'),
+		[files],
+	);
+
+	const isDisabled =
+		disabled || isSubmitting || hasUploadingFile || hasErroredFile || !trimmed;
 
 	const handleSubmit = async (e?: FormEvent) => {
 		e?.preventDefault();
@@ -39,7 +68,10 @@ const ChatInput = ({
 		setPrompt('');
 
 		try {
-			await onSubmit(value);
+			await onSubmit({
+				prompt: value,
+				files,
+			});
 		} catch (error) {
 			setPrompt(value);
 			throw error;
@@ -57,26 +89,41 @@ const ChatInput = ({
 		<form onSubmit={handleSubmit} className={cn('h-full w-full', className)}>
 			{header}
 
-			<div className="rounded-3xl border bg-background shadow-sm">
+			<div className="rounded-[28px] border bg-background shadow-sm">
+				{files.length > 0 ? (
+					<UploadFileList
+						files={files}
+						onRemoveFile={removeFile}
+						disabled={disabled}
+					/>
+				) : null}
+
 				<Textarea
 					value={prompt}
 					onChange={(e) => setPrompt(e.target.value)}
 					onKeyDown={handleKeyDown}
 					placeholder={placeholder}
 					disabled={disabled || isSubmitting}
-					className="min-h-24 resize-none border-0 bg-transparent px-5 py-4 text-base shadow-none focus-visible:ring-0"
+					className={cn(
+						'min-h-24 resize-none border-0 bg-transparent px-5 py-3 text-base shadow-none focus-visible:ring-0',
+						'placeholder:text-muted-foreground/80',
+					)}
 				/>
 
 				<div className="flex items-center justify-between px-4 pb-4">
-					<p className="text-xs text-muted-foreground">
-						Press Enter to send, Shift + Enter for newline
-					</p>
+					<DocumentUploader
+						files={files}
+						onFilesSelected={onFilesSelected}
+						onRemoveFile={removeFile}
+						disabled={disabled || isSubmitting}
+						multiple={true}
+					/>
 
 					<Button
 						type="submit"
 						size="icon"
 						disabled={isDisabled}
-						className="rounded-full"
+						className="h-10 w-10 rounded-full"
 					>
 						<ArrowUp className="h-4 w-4" />
 					</Button>
