@@ -98,7 +98,7 @@ def update_conversation_rag(
     Update RAG metadata (vector_index and document_ids) for a conversation.
     """
     conversation = ChatHistoryService.update_conversation_rag(
-        db, conversation_id, rag_update.vector_index, rag_update.document_ids
+        db, conversation_id, rag_update.vector_index
     )
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
