@@ -11,6 +11,8 @@ from app.schemas.chat import ChatRequest, ChatResponse
 from app.core.llm import LLMService, _extract_reasoning
 from app.core.chat_history import ChatHistoryService
 
+from app.constants.prompt_templates import STRUCTURED_OUTPUT_SYSTEM_PROMPT
+
 # Chat history sub‑router
 from app.api.routes import chat_history
 
@@ -65,10 +67,17 @@ async def stream_chat_response(
 
     messages_dicts = [m.model_dump() for m in request.messages]
 
+    structured_system = {
+       "role": "system",
+       "content": STRUCTURED_OUTPUT_SYSTEM_PROMPT.strip(),
+    }
+    
+    messages_with_structure = [structured_system] + messages_dicts
+
     async def event_generator():
         try:
             async for chunk in LLMService.stream(
-                messages=messages_dicts,
+                messages=messages_with_structure,
                 model_name=request.model_name,
                 rag_context=rag_context,
                 **request.kwargs,
@@ -111,10 +120,17 @@ async def get_chat_response(
         raise HTTPException(status_code=500, detail=f"RAG retrieval failed: {e}")
 
     messages_dicts = [m.model_dump() for m in request.messages]
-
+    
+    structured_system = {
+       "role": "system",
+       "content": STRUCTURED_OUTPUT_SYSTEM_PROMPT.strip(),
+    }
+    
+    messages_with_structure = [structured_system] + messages_dicts
+    
     try:
         ai_message = await LLMService.generate(
-            messages=messages_dicts,
+            messages=messages_with_structure,
             model_name=request.model_name,
             rag_context=rag_context,
             **request.kwargs,
