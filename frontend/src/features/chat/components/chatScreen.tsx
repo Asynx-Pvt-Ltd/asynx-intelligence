@@ -10,10 +10,15 @@ import {
 	mapHistoryToUiMessages,
 } from '../lib/chatHistory';
 import ConversationChatInput from './conversationChatInput';
+import ChatMessageList from './chatMessageList';
+import { useUploadStore } from '@/src/stores/document/uploadStore';
+import type { AttachedFile } from '@/src/features/documents/types/documentTypes';
 
 export default function ChatScreen({ chatId }: { chatId: string }) {
 	const pendingPrompt = useChatStore((state) => state.pendingPrompt);
 	const clearPendingPrompt = useChatStore((state) => state.clearPendingPrompt);
+
+	const { files } = useUploadStore((s) => s);
 
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
@@ -30,9 +35,27 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 
 		const currentRunId = ++streamRunIdRef.current;
 
+		// Transform uploaded files into AttachedFile format
+		const uploadedFiles = files.filter(
+			(f) =>
+				f.status === 'uploaded' &&
+				f.conversationId &&
+				f.conversationId === chatId,
+		);
+
+		const attachedFiles: AttachedFile[] = uploadedFiles.map((f) => ({
+			file_id: f.fileId,
+			file_name: f.fileName,
+			document_ids: f.documentIds,
+		}));
+
+		// Store file IDs to remove after sending
+		const fileIdsToRemove = uploadedFiles.map((f) => f.id);
+
 		const userMsg: Message = {
 			role: 'user',
 			content: trimmed,
+			attached_files: attachedFiles.length > 0 ? attachedFiles : undefined,
 		};
 
 		const assistantMsg: Message = {
@@ -49,12 +72,14 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 			await addConversationMessage(chatId, {
 				role: 'user',
 				content: userMsg.content,
+				attached_files: attachedFiles,
 			});
 
 			const payload: ChatRequest = {
 				messages: [...baseMessages, userMsg],
+				conversation_id: chatId,
 				model_name: 'gpt-5-mini',
-				k: 1,
+				k: 10,
 				kwargs: {},
 			};
 
@@ -103,6 +128,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				content: fullContent,
 				reasoning_content: fullReasoning,
 				model_name: 'gpt-5-mini',
+				attached_files: [],
 			});
 		} catch {
 			if (streamRunIdRef.current !== currentRunId) return;
@@ -124,6 +150,10 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		} finally {
 			if (streamRunIdRef.current === currentRunId) {
 				setIsLoading(false);
+				// Remove uploaded files after sending
+				fileIdsToRemove.forEach((id) => {
+					useUploadStore.getState().removeFile(id);
+				});
 			}
 		}
 	};
@@ -186,18 +216,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		<div className="mx-auto flex h-full w-full max-w-4xl flex-col">
 			<div className="flex-1 px-4 py-6">
 				<div className="flex flex-col gap-4">
-					{messages.map((message, index) => (
-						<div
-							key={`${message.role}-${index}`}
-							className={
-								message.role === 'user'
-									? 'ml-auto max-w-[80%] rounded-2xl bg-primary px-4 py-3 text-primary-foreground'
-									: 'max-w-[80%] rounded-2xl bg-muted px-4 py-3 text-foreground'
-							}
-						>
-							{message.content || (isLoading ? 'Thinking...' : '')}
-						</div>
-					))}
+					<ChatMessageList messages={messages} isLoading={isLoading} />
 					<div ref={bottomRef} />
 				</div>
 			</div>
@@ -206,6 +225,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				<ConversationChatInput
 					onSendMessage={sendMessage}
 					disabled={isHydrating || isLoading}
+					conversationId={chatId}
 				/>
 			</div>
 		</div>
