@@ -2,19 +2,20 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
 from datetime import datetime
-
+from rag import AttachedFile
 
 class Message(BaseModel):
     role: Literal["system", "user", "assistant"]
     content: str
+    attached_files: Optional[List[AttachedFile]] = None
 
 
 class ChatRequest(BaseModel):
     messages: List[Message]
     model_name: str = "gpt-5-mini"
-    vector_index: Optional[str] = Field(
+    conversation_id: Optional[UUID] = Field(
         default=None,
-        description="If provided, retrieves RAG context from this collection before generating.",
+        description="If provided, retrieves RAG context from conversation's vector_index.",
     )
     k: int = Field(
         default=10, ge=0, description="Number of documents to retrieve for RAG."
@@ -35,21 +36,27 @@ class ChatResponse(BaseModel):
 # ========== Chat History Schemas ==========
 
 class ConversationBase(BaseModel):
-    title:str
+    title: str
     user_id: str
     org_id: str
 
 
 class ConversationCreate(ConversationBase):
-    pass
+    is_draft: bool = True
 
 
 class ConversationUpdate(BaseModel):
     title: Optional[str] = None
+    vector_index: Optional[str] = None
+    document_ids: Optional[List[str]] = None
+    is_draft: Optional[bool] = None
 
 
 class Conversation(ConversationBase):
     id: UUID
+    vector_index: Optional[str] = None
+    document_ids: Optional[List[str]] = None
+    is_draft: bool = True
     created_at: datetime
     updated_at: datetime
 
@@ -63,6 +70,7 @@ class ConversationMessageBase(BaseModel):
     model_name: Optional[str] = None
     reasoning_content: Optional[str] = None
     usage: Optional[Dict[str, Any]] = None
+    attached_files: Optional[List[AttachedFile]] = None
 
 
 class ConversationMessageCreate(ConversationMessageBase):

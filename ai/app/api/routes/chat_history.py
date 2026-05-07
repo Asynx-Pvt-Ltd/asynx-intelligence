@@ -15,6 +15,7 @@ from app.schemas.chat import (
     ConversationMessage,
     ConversationMessageCreate,
 )
+from app.schemas.rag import ConversationRAGUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,23 @@ def update_conversation(
     Update conversation metadata (e.g., title).
     """
     conversation = ChatHistoryService.update_conversation(db, conversation_id, conversation_in)
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return conversation
+
+
+@router.patch("/{conversation_id}/rag", response_model=Conversation)
+def update_conversation_rag(
+    conversation_id: UUID,
+    rag_update: ConversationRAGUpdate,
+    db: Session = Depends(get_db),
+):
+    """
+    Update RAG metadata (vector_index and document_ids) for a conversation.
+    """
+    conversation = ChatHistoryService.update_conversation_rag(
+        db, conversation_id, rag_update.vector_index, rag_update.document_ids
+    )
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return conversation
