@@ -19,15 +19,9 @@ export const ragUploadSchema = z
 				message: 'File size must be 25MB or less.',
 			}),
 
-		vector_index: z
-			.string({ message: 'vector_index is required.' })
-			.trim()
-			.min(1, 'vector_index is required.')
-			.max(100, 'vector_index is too long.')
-			.regex(/^[a-zA-Z0-9_-]+$/, {
-				message:
-					'vector_index can only contain letters, numbers, underscores, and hyphens.',
-			}),
+		org_id: z.string({ message: 'organization id is required' }).min(1),
+		user_id: z.string({ message: 'user id is required' }).min(1),
+		conversation_id: z.string().optional(),
 
 		chunk_size: z.coerce
 			.number({

@@ -8,11 +8,11 @@ FRONTEND_HOST=http://localhost:5173
 ```
 
 ```bash
-pip install uv 
+pip install uv
 cd ai
 
 uv sync
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 http://localhost:8000/docs

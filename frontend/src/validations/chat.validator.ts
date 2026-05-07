@@ -10,7 +10,7 @@ export const chatRequestSchema = z.object({
 		)
 		.min(1),
 	model_name: z.string().default('gpt-5-mini'),
-	vector_index: z.string().nullable().optional(),
+	conversation_id: z.string({ message: 'Conversation id is required' }).min(1),
 	k: z.number().int().min(1).max(20).default(10),
 	kwargs: z.record(z.string(), z.unknown()).default({}),
 });

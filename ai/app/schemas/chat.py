@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
 from datetime import datetime
-from rag import AttachedFile
+from app.schemas.rag import AttachedFile
 
 class Message(BaseModel):
     role: Literal["system", "user", "assistant"]

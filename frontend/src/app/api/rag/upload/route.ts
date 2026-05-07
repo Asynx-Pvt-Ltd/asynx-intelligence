@@ -8,7 +8,7 @@ const API_BASE = API_ENDPOINTS.SERVER_URL;
 
 export async function POST(request: NextRequest) {
 	try {
-		const { orgId, error } = await requireTenantAuth();
+		const { userId, orgId, error } = await requireTenantAuth();
 
 		if (error) {
 			return error;
@@ -18,7 +18,9 @@ export async function POST(request: NextRequest) {
 
 		const parsed = ragUploadSchema.safeParse({
 			file: formData.get('file'),
-			vector_index: `org_${orgId}`,
+			org_id: orgId,
+			user_id: userId,
+			conversation_id: formData.get('conversation_id') ?? undefined,
 			chunk_size: formData.get('chunk_size') ?? 1000,
 			chunk_overlap: formData.get('chunk_overlap') ?? 200,
 			parser_strategy: formData.get('parser_strategy') ?? 'speed',
@@ -34,13 +36,24 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const { file, vector_index, chunk_size, chunk_overlap, parser_strategy } =
-			parsed.data;
+		const {
+			file,
+			user_id,
+			org_id,
+			conversation_id,
+			chunk_size,
+			chunk_overlap,
+			parser_strategy,
+		} = parsed.data;
 
 		const forwardFormData = new FormData();
 		forwardFormData.append('file', file, file.name);
-		forwardFormData.append('vector_index', vector_index);
 		forwardFormData.append('chunk_size', String(chunk_size));
+		forwardFormData.append('user_id', String(user_id));
+		forwardFormData.append('org_id', String(org_id));
+		if (conversation_id) {
+			forwardFormData.append('conversation_id', conversation_id);
+		}
 		forwardFormData.append('chunk_overlap', String(chunk_overlap));
 		forwardFormData.append('parser_strategy', parser_strategy);
 

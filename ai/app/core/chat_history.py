@@ -71,12 +71,16 @@ class ChatHistoryService:
         conversation_in: ConversationUpdate,
     ) -> Optional[Conversation]:
         """
-        Update conversation fields (e.g., title).
+        Update conversation fields (e.g., title). document_ids updates are ignored.
         """
         db_conversation = ChatHistoryService.get_conversation(db, conversation_id)
         if not db_conversation:
             return None
-        for field, value in conversation_in.model_dump(exclude_unset=True).items():
+        update_data = conversation_in.model_dump(exclude_unset=True)
+        # Remove document_ids from update data (deprecated, stored per message)
+        if "document_ids" in update_data:
+            del update_data["document_ids"]
+        for field, value in update_data.items():
             setattr(db_conversation, field, value)
         db.add(db_conversation)
         db.commit()
@@ -112,15 +116,22 @@ class ChatHistoryService:
         if not conversation:
             raise ValueError(f"Conversation {message_in.conversation_id} not found")
 
+        # Convert attached_files to JSON-serializable format (UUIDs to strings)
+        attached_files_json = None
+        if message_in.attached_files:
+            attached_files_json = []
+            for f in message_in.attached_files:
+                file_dict = f.model_dump()
+                # Convert UUID to string for JSON serialization
+                if 'file_id' in file_dict and file_dict['file_id']:
+                    file_dict['file_id'] = str(file_dict['file_id'])
+                attached_files_json.append(file_dict)
+        
         db_message = ConversationMessage(
             conversation_id=message_in.conversation_id,
             role=message_in.role,
             content=message_in.content,
-            attached_files=(
-                [f.model_dump() for f in (message_in.attached_files or [])]
-                if message_in.attached_files
-                else None
-            ),
+            attached_files=attached_files_json,
             model_name=message_in.model_name,
             reasoning_content=message_in.reasoning_content,
             usage=message_in.usage,
@@ -181,17 +192,18 @@ class ChatHistoryService:
         db: Session,
         conversation_id: UUID,
         vector_index: str,
-        document_ids: List[str],
     ) -> Optional[Conversation]:
         """
-        Update RAG metadata (vector_index and document_ids) for a conversation.
+        Update RAG metadata (vector_index only). document_ids are no longer stored on conversation.
         """
         db_conversation = ChatHistoryService.get_conversation(db, conversation_id)
         if not db_conversation:
             return None
         
         db_conversation.vector_index = vector_index
-        db_conversation.document_ids = document_ids
+        # document_ids are not stored on conversation anymore (they are stored per message)
+        # Keep the column for backward compatibility but set to empty list
+        db_conversation.document_ids = []
         db.add(db_conversation)
         db.commit()
         db.refresh(db_conversation)

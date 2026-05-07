@@ -14,7 +14,9 @@ export async function POST(req: NextRequest) {
 	}
 
 	const json = await req.json().catch(() => null);
-	const validated = chatRequestSchema.safeParse(json);
+	const validated = chatRequestSchema.safeParse({
+		...json,
+	});
 
 	if (!validated.success) {
 		return NextResponse.json(
