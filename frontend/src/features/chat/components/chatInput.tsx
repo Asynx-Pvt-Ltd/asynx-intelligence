@@ -25,7 +25,6 @@ interface ChatInputProps {
 	placeholder?: string;
 	disabled?: boolean;
 	isSubmitting?: boolean;
-	header?: React.ReactNode;
 	defaultValue?: string;
 	className?: string;
 }
@@ -36,7 +35,6 @@ const ChatInput = ({
 	onFilesSelected,
 	disabled = false,
 	isSubmitting = false,
-	header,
 	defaultValue = '',
 	className,
 }: ChatInputProps) => {
@@ -86,10 +84,14 @@ const ChatInput = ({
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className={cn('h-full w-full', className)}>
-			{header}
-
-			<div className="rounded-[28px] border bg-background shadow-sm">
+		<form
+			onSubmit={handleSubmit}
+			className={cn(
+				'h-full w-full bg-chat-input rounded-[28px] border shadow-sm',
+				className,
+			)}
+		>
+			<div>
 				{files.length > 0 ? (
 					<UploadFileList
 						files={files}
@@ -99,14 +101,15 @@ const ChatInput = ({
 				) : null}
 
 				<Textarea
+					id="prompt"
 					value={prompt}
 					onChange={(e) => setPrompt(e.target.value)}
 					onKeyDown={handleKeyDown}
 					placeholder={placeholder}
 					disabled={disabled || isSubmitting}
 					className={cn(
-						'min-h-24 resize-none border-0 bg-transparent px-5 py-3 text-base shadow-none focus-visible:ring-0',
-						'placeholder:text-muted-foreground/80',
+						'min-h-20 resize-none border-0 bg-transparent px-5 py-3  text-lg! shadow-none focus-visible:ring-0',
+						'placeholder:text-muted-foreground/80 placeholder:text-lg',
 					)}
 				/>
 

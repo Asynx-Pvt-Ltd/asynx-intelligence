@@ -1,15 +1,18 @@
 'use client';
 
 import { Button } from '@/src/components/ui/button';
+import { ThemeToggle } from '@/src/components/ui/themeToggle';
 import { cn } from '@/src/lib/utils';
 import { useChatSidebarStore } from '@/src/stores/chat/chatSidebarStore';
+import { useChatStore } from '@/src/stores/chat/chatStore';
+import { OrganizationSwitcher } from '@clerk/nextjs';
 import { MessageSquare, PanelLeft, PenSquare } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getConversations } from '../../chat/lib/chatHistory';
 import { Conversation } from '../../chat/types/chatHistory';
-import { useChatStore } from '@/src/stores/chat/chatStore';
+import SignOutButton from './signOutButton';
 
 interface SidebarProps {
 	className?: string;
@@ -20,11 +23,11 @@ interface SidebarProps {
 const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 	const pathname = usePathname();
 	const [chats, setChats] = useState<Conversation[]>([]);
+	const [search, setSearch] = useState('');
 
 	const conversationsDirty = useChatStore((s) => s.conversationsDirty);
 
 	const isOpen = useChatSidebarStore((state) => state.isOpen);
-	const open = useChatSidebarStore((state) => state.open);
 	const toggle = useChatSidebarStore((state) => state.toggle);
 
 	useEffect(() => {
@@ -40,64 +43,87 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 		void fetchConversations();
 	}, [conversationsDirty]);
 
+	const filteredChats = chats.filter((chat) =>
+		chat.title?.toLowerCase().includes(search.toLowerCase()),
+	);
+
 	return (
 		<aside
-			onClick={() => {
-				if (!isOpen) {
-					open();
-				}
-			}}
 			className={cn(
-				'flex h-screen shrink-0 flex-col overflow-hidden border-r bg-background transition-[width] duration-300 ease-in-out cursor-pointer hover:brightness-110',
-				isOpen ? 'w-72' : 'w-20',
+				'flex h-screen shrink-0 flex-row  bg-background transition-[width] duration-300 ease-in-out',
+				isOpen ? 'w-sm' : 'w-16',
 				className,
 			)}
 			style={style}
 		>
-			<div
-				className={cn(
-					'flex h-16 items-center gap-2 px-3',
-					!isOpen && 'justify-center px-2',
-				)}
-			>
-				<Button
-					variant="ghost"
-					size="icon"
-					onClick={(e) => {
-						e.preventDefault();
-						toggle();
-					}}
-					aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-					aria-expanded={isOpen}
-				>
-					<PanelLeft className="h-5 w-5" />
-				</Button>
+			<div className="flex w-16 flex-col items-center justify-between dark:bg-[#1E1F22] px-2 py-3 not-dark:border-r border-r-gray-300">
+				<div className="flex flex-col items-center gap-4">
+					<div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+						AI
+					</div>
 
-				{isOpen && (
 					<Button
-						onClick={onNewChat}
-						className={cn(
-							'rounded-xl transition-all duration-300',
-							'flex-1 justify-start',
-						)}
-						aria-label="New chat"
+						variant="ghost"
+						size="icon"
+						onClick={toggle}
+						aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+						aria-expanded={isOpen}
 					>
-						<PenSquare className={cn('h-4 w-4')} />
-						New Chat
+						<PanelLeft className="h-5 w-5" />
 					</Button>
-				)}
+				</div>
+
+				<div className="flex flex-col items-center gap-3">
+					<OrganizationSwitcher
+						afterSelectOrganizationUrl="/"
+						appearance={{
+							elements: {
+								rootBox: 'w-8 h-8',
+								organizationSwitcherTrigger:
+									'w-8 h-8 rounded-full border border-border bg-background flex items-center justify-center',
+								organizationPreview: 'hidden',
+								organizationAvatarBox: 'w-5 h-5',
+								organizationSwitcherTriggerIcon: 'w-3 h-3',
+							},
+						}}
+					/>
+					<ThemeToggle />
+					<SignOutButton />
+				</div>
 			</div>
 
-			<div className="flex-1 overflow-y-auto p-2">
-				{isOpen && (
-					<div className="mb-2 px-2 text-xs font-medium text-muted-foreground">
+			<div
+				className={cn(
+					'flex flex-1 flex-col overflow-hidden',
+					!isOpen && 'pointer-events-none opacity-0',
+				)}
+			>
+				<div className="flex w-full flex-col gap-2 px-3 py-3">
+					<Button
+						onClick={onNewChat}
+						className="w-full justify-start rounded-xl"
+						aria-label="New chat"
+					>
+						<PenSquare className="mr-2 h-4 w-4" />
+						New Chat
+					</Button>
+
+					<input
+						type="text"
+						className="h-8 w-full rounded-lg border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						placeholder="Search conversations"
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+					/>
+				</div>
+
+				<div className="flex-1 overflow-y-auto px-3 pb-2">
+					<div className="mb-2 px-1 text-xs font-medium text-muted-foreground">
 						Recent
 					</div>
-				)}
 
-				<div className="space-y-1">
-					{isOpen &&
-						chats.map((chat) => {
+					<div className="space-y-1">
+						{filteredChats.map((chat) => {
 							const isActive = pathname === `/chat/${chat.id}`;
 
 							return (
@@ -105,25 +131,21 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 									key={chat.id}
 									href={`/chat/${chat.id}`}
 									className={cn(
-										'flex rounded-xl text-sm transition-colors',
-										isOpen
-											? 'items-start gap-3 px-3 py-3'
-											: 'justify-center px-2 py-3',
+										'flex items-start gap-3 rounded-xl px-3 py-2 text-sm transition-colors',
 										isActive
 											? 'bg-muted text-foreground'
 											: 'text-muted-foreground hover:bg-muted hover:text-foreground',
 									)}
-									title={!isOpen ? chat.title : undefined}
+									title={chat.title || 'Untitled Chat'}
 								>
 									<MessageSquare className="mt-0.5 h-4 w-4 shrink-0" />
-									{isOpen && (
-										<span className="line-clamp-2">
-											{chat.title || 'Untitled Chat'}
-										</span>
-									)}
+									<span className="line-clamp-2">
+										{chat.title || 'Untitled Chat'}
+									</span>
 								</Link>
 							);
 						})}
+					</div>
 				</div>
 			</div>
 		</aside>

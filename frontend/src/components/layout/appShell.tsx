@@ -15,7 +15,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 			/>
 
 			<div className="flex flex-1 flex-col min-w-0">
-				<Navbar className="sticky top-0 z-30 h-16 border-b bg-background/95 backdrop-blur" />
+				<Navbar className="sticky top-0 z-30 h-16 bg-background/95 backdrop-blur" />
 				<main className="flex-1 overflow-y-auto">{children}</main>
 			</div>
 		</div>

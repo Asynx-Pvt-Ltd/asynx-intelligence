@@ -1,7 +1,5 @@
-import { OrganizationSwitcher } from '@clerk/nextjs';
-import SignOutButton from './signOutButton';
-import { ThemeToggle } from '@/src/components/ui/themeToggle';
 import { cn } from '@/src/lib/utils';
+import { useOrganization } from '@clerk/nextjs';
 
 const Navbar = ({
 	className = '',
@@ -10,17 +8,16 @@ const Navbar = ({
 	className?: string;
 	style?: {};
 }) => {
+	const { organization } = useOrganization();
 	return (
 		<header
 			className={cn(
-				'flex h-16 items-center justify-end gap-2 border-b bg-background px-4',
+				'flex h-16 items-center justify-end gap-2 bg-background px-4',
 				className,
 			)}
 			style={style}
 		>
-			<ThemeToggle />
-			<SignOutButton />
-			<OrganizationSwitcher />
+			<h1 className="font-semibold text-xl">{organization?.name}</h1>
 		</header>
 	);
 };

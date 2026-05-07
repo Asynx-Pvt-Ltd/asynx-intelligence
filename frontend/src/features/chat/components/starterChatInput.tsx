@@ -134,13 +134,15 @@ const StarterChatInput = () => {
 	};
 
 	return (
-		<ChatInput
-			onSubmit={handleCreateConversation}
-			onFilesSelected={handleFilesSelected}
-			isSubmitting={isSubmitting}
-			header={<ChatInputHeader title="Enterprise AI Chatbot" />}
-			className="max-w-3xl"
-		/>
+		<div className="sm:w-3xl w-lg p-4">
+			<ChatInputHeader title="Enterprise AI Chatbot" />
+			<ChatInput
+				onSubmit={handleCreateConversation}
+				onFilesSelected={handleFilesSelected}
+				isSubmitting={isSubmitting}
+				className="max-w-3xl"
+			/>
+		</div>
 	);
 };
 
