@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/src/stores/chat/chatStore';
 import { streamChatResponse } from '@/src/features/chat/lib/chatStream';
-import type { Message, ChatRequest } from '@/src/features/chat/types/chatTypes';
+import type {
+	Message,
+	ChatRequest,
+	ChatSubmitPayload,
+} from '@/src/features/chat/types/chatTypes';
 import {
 	addConversationMessage,
 	getConversation,
@@ -19,7 +23,6 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 	const clearPendingPrompt = useChatStore((state) => state.clearPendingPrompt);
 
 	const { files } = useUploadStore((s) => s);
-
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isHydrating, setIsHydrating] = useState(true);
@@ -29,13 +32,12 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 	const messagesRef = useRef<Message[]>([]);
 	const bottomRef = useRef<HTMLDivElement | null>(null);
 
-	const sendMessage = async (prompt: string) => {
+	const sendMessage = async ({ prompt, files }: ChatSubmitPayload) => {
 		const trimmed = prompt.trim();
 		if (!trimmed || isLoading) return;
 
 		const currentRunId = ++streamRunIdRef.current;
 
-		// Transform uploaded files into AttachedFile format
 		const uploadedFiles = files.filter(
 			(f) =>
 				f.status === 'uploaded' &&
@@ -79,7 +81,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				messages: [...baseMessages, userMsg],
 				conversation_id: chatId,
 				model_name: 'gpt-5-mini',
-				k: 10,
+				k: 20,
 				kwargs: {},
 			};
 
@@ -207,7 +209,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		initializedRef.current = true;
 		clearPendingPrompt();
 
-		void sendMessage(pendingPrompt);
+		void sendMessage({ prompt: pendingPrompt, files: files });
 	}, [pendingPrompt, isHydrating, clearPendingPrompt]);
 
 	if (isHydrating) return <div className="p-6">Loading conversation...</div>;
