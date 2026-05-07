@@ -1,11 +1,13 @@
 'use client';
 
 import { cn } from '@/src/lib/utils';
-import { ArrowLeft, MoreVertical, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getConversation } from '../lib/chatHistory';
 import type { Conversation } from '../types/chatHistory';
+import ConversationActionsMenu from './ConversationActionsMenu';
+import { useRouter } from 'next/navigation';
 
 interface ChatNavbarProps {
 	chatId: string;
@@ -21,6 +23,7 @@ const ChatNavbar = ({
 	const [conversation, setConversation] = useState<Conversation | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const router = useRouter();
 
 	useEffect(() => {
 		let mounted = true;
@@ -122,9 +125,21 @@ const ChatNavbar = ({
 					</button>
 				</div>
 
-				<button className="p-2 rounded-md hover:bg-accent transition-colors">
-					<MoreVertical className="h-5 w-5 text-muted-foreground" />
-				</button>
+				<ConversationActionsMenu
+					conversationId={chatId}
+					currentTitle={conversation?.title || ''}
+					onTitleUpdated={(newTitle) => {
+						setConversation((prev) =>
+							prev ? { ...prev, title: newTitle } : null,
+						);
+					}}
+					onDeleted={() => {
+						// Redirect to home if we're viewing this conversation
+						if (window.location.pathname.includes(chatId)) {
+							router.push('/');
+						}
+					}}
+				/>
 			</div>
 		</header>
 	);

@@ -13,6 +13,8 @@ import { useEffect, useState } from 'react';
 import { getConversations } from '../../chat/lib/chatHistory';
 import { Conversation } from '../../chat/types/chatHistory';
 import SignOutButton from './signOutButton';
+import ConversationActionsMenu from '../../chat/components/ConversationActionsMenu';
+import Logo from '@/src/components/ui/logo';
 
 interface SidebarProps {
 	className?: string;
@@ -59,7 +61,7 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 			<div className="flex w-16 flex-col items-center justify-between dark:bg-[#1E1F22] px-2 py-3 not-dark:border-r border-r-gray-300">
 				<div className="flex flex-col items-center gap-4">
 					<div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
-						AI
+						<Logo />
 					</div>
 
 					<Button
@@ -131,17 +133,30 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 									key={chat.id}
 									href={`/chat/${chat.id}`}
 									className={cn(
-										'flex items-start gap-3 rounded-xl px-3 py-2 text-sm transition-colors',
+										'flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm transition-colors',
 										isActive
 											? 'bg-muted text-foreground'
 											: 'text-muted-foreground hover:bg-muted hover:text-foreground',
 									)}
 									title={chat.title || 'Untitled Chat'}
 								>
-									<MessageSquare className="mt-0.5 h-4 w-4 shrink-0" />
-									<span className="line-clamp-2">
+									{/* Left: title */}
+									<span className="line-clamp-2 flex-1 text-left">
 										{chat.title || 'Untitled Chat'}
 									</span>
+
+									{/* Right: three-dot menu; stop click from triggering Link */}
+									<div
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+										}}
+									>
+										<ConversationActionsMenu
+											conversationId={chat.id}
+											className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+										/>
+									</div>
 								</Link>
 							);
 						})}

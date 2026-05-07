@@ -111,6 +111,22 @@ export async function addConversationMessage(
 	return res.json();
 }
 
+export async function deleteConversation(conversationId: string) {
+	const res = await fetch(
+		`${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}/${conversationId}`,
+		{
+			method: 'DELETE',
+			cache: 'no-store',
+		},
+	);
+
+	if (!res.ok) {
+		throw new Error('Failed to delete conversation');
+	}
+
+	return res.json();
+}
+
 export function mapHistoryToUiMessages(messages: HistoryMessage[]): Message[] {
 	return messages.map((message) => ({
 		role: message.role,
