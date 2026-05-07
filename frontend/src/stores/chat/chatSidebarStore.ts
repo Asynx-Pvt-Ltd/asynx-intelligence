@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { ChatSidebarStore } from './types';
+import { ChatSidebarStoreProps } from './types';
 
-export const useChatSidebarStore = create<ChatSidebarStore>((set) => ({
+export const useChatSidebarStore = create<ChatSidebarStoreProps>((set) => ({
 	isOpen: true,
 	open: () => set({ isOpen: true }),
 	close: () => set({ isOpen: false }),

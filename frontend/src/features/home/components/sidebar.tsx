@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getConversations } from '../../chat/lib/chatHistory';
 import { Conversation } from '../../chat/types/chatHistory';
+import { useChatStore } from '@/src/stores/chat/chatStore';
 
 interface SidebarProps {
 	className?: string;
@@ -19,6 +20,8 @@ interface SidebarProps {
 const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 	const pathname = usePathname();
 	const [chats, setChats] = useState<Conversation[]>([]);
+
+	const conversationsDirty = useChatStore((s) => s.conversationsDirty);
 
 	const isOpen = useChatSidebarStore((state) => state.isOpen);
 	const open = useChatSidebarStore((state) => state.open);
@@ -35,7 +38,7 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 		};
 
 		void fetchConversations();
-	}, []);
+	}, [conversationsDirty]);
 
 	return (
 		<aside

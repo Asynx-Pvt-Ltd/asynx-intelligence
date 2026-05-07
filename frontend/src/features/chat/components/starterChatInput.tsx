@@ -26,6 +26,9 @@ const StarterChatInput = () => {
 	const updateFile = useUploadStore((s) => s.updateFile);
 
 	const setPendingPrompt = useChatStore((state) => state.setPendingPrompt);
+	const bumpConversationsDirty = useChatStore(
+		(state) => state.bumpConversationsDirty,
+	);
 
 	const handleFilesSelected = async (selectedFiles: File[]) => {
 		if (!selectedFiles.length) return;
@@ -119,6 +122,7 @@ const StarterChatInput = () => {
 				conversationId = conversation.id;
 			}
 
+			bumpConversationsDirty();
 			setPendingPrompt(prompt);
 			router.push(`/chat/${conversationId}`);
 		} catch (error) {
