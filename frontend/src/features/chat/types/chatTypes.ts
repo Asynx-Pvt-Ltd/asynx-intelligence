@@ -1,12 +1,16 @@
+import { AttachedFile } from '@/src/features/documents/types/documentTypes';
+
 export type MessageRole = 'system' | 'user' | 'assistant';
 
 export interface Message {
 	role: MessageRole;
 	content: string;
+	attached_files?: AttachedFile[];
 }
 
 export interface ChatRequest {
 	messages: Message[];
+	conversation_id: string;
 	model_name?: string;
 	vector_index?: string | null;
 	k?: number;
