@@ -223,7 +223,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				</div>
 			</div>
 
-			<div className="sticky bottom-0 z-10 shrink-0 bg-background px-4 pb-4 pt-3">
+			<div className="mb-6 px-4">
 				<ConversationChatInput
 					onSendMessage={sendMessage}
 					disabled={isHydrating || isLoading}

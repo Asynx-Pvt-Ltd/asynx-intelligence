@@ -8,8 +8,10 @@ export default async function ChatPage({
 	const { id } = await params;
 
 	return (
-		<div className="h-full">
-			<ChatScreen chatId={id} />
+		<div className="h-full p-4">
+			<div className="h-full bg-chat-screen rounded-lg">
+				<ChatScreen chatId={id} />
+			</div>
 		</div>
 	);
 }
