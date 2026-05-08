@@ -55,7 +55,6 @@ class ConversationUpdate(BaseModel):
 class Conversation(ConversationBase):
     id: UUID
     vector_index: Optional[str] = None
-    document_ids: Optional[List[str]] = None
     is_draft: bool = True
     created_at: datetime
     updated_at: datetime
@@ -88,3 +87,8 @@ class ConversationMessage(ConversationMessageBase):
 
 class ConversationWithMessages(Conversation):
     messages: List[ConversationMessage] = []
+
+
+class DeleteAttachedFileRequest(BaseModel):
+    message_id: UUID
+    file_id: str

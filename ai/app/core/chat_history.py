@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
+from app.schemas.rag import AttachedFile
 from app.models.chat import Conversation, ConversationMessage
 from app.schemas.chat import ConversationCreate, ConversationUpdate, ConversationMessageCreate
 
@@ -77,9 +78,7 @@ class ChatHistoryService:
         if not db_conversation:
             return None
         update_data = conversation_in.model_dump(exclude_unset=True)
-        # Remove document_ids from update data (deprecated, stored per message)
-        if "document_ids" in update_data:
-            del update_data["document_ids"]
+        
         for field, value in update_data.items():
             setattr(db_conversation, field, value)
         db.add(db_conversation)
@@ -160,6 +159,22 @@ class ChatHistoryService:
             .limit(limit)
             .all()
         )
+
+    @staticmethod
+    def update_message_attached_files(
+        db: Session,
+        message_id: UUID,
+        attached_files: List[AttachedFile],
+    ) -> ConversationMessage | None:
+        db_msg = db.query(ConversationMessage).filter_by(id=message_id).first()
+        if not db_msg:
+            return None
+
+        db_msg.attached_files = attached_files
+        db.add(db_msg)
+        db.commit()
+        db.refresh(db_msg)
+        return db_msg
 
     @staticmethod
     def get_conversation_with_messages(

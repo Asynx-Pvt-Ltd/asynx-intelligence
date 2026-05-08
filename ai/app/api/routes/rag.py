@@ -11,8 +11,8 @@ from app.core.rag.chunker import chunk_document
 from app.core.rag.parsers import create_parser
 from app.core.rag.parsers.base import DocumentParserError
 from app.schemas.rag import RAGDeleteRequest, RAGDeleteResponse, RAGUploadResponse
-from app.schemas.chat import ConversationCreate
 from app.core.chat_history import ChatHistoryService
+from app.models.chat import ConversationMessage
 
 router = APIRouter(prefix="/rag", tags=["RAG"])
 
@@ -149,18 +149,9 @@ async def delete_documents(
             # Get the conversation
             conversation = ChatHistoryService.get_conversation(db, conversation_id)
             if conversation:
-                # Update conversation's vector_index (document_ids are no longer stored)
-                ChatHistoryService.update_conversation_rag(
-                    db,
-                    conversation_id,
-                    vector_index=conversation.vector_index,
-                    document_ids=[]  # ignored by service
-                )
-                
                 # Check if conversation is empty draft and should be cleaned up
                 # Since we no longer track document_ids, we check if there are any messages
                 # If the conversation has no messages, it's safe to delete.
-                from app.models.chat import ConversationMessage
                 message_count = db.query(ConversationMessage).filter(
                     ConversationMessage.conversation_id == conversation_id
                 ).count()
@@ -169,8 +160,6 @@ async def delete_documents(
                     conversation.vector_index == request.vector_index):
                     # Delete the conversation
                     ChatHistoryService.delete_conversation(db, conversation_id)
-                    # Optionally delete the vector index collection
-                    # rag.delete_collection(collection_name=request.vector_index)
 
         return RAGDeleteResponse(
             vector_index=request.vector_index,

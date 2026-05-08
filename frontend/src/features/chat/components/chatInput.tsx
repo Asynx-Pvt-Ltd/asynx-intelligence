@@ -13,6 +13,7 @@ import {
 	type UploadingFile,
 } from '../../documents/components/documentUploader';
 import UploadFileList from '../../documents/components/uploadFileList';
+import { deleteRagDocuments } from '../../documents/lib/ragClient';
 
 type ChatSubmitPayload = {
 	prompt: string;
@@ -52,6 +53,19 @@ const ChatInput = ({
 		[files],
 	);
 
+	const removeFileContext = async (file: UploadingFile) => {
+		removeFile(file.id);
+		if (!file.documentIds || !file.vectorIndex) return;
+		try {
+			await deleteRagDocuments({
+				vector_index: file.vectorIndex,
+				document_ids: file.documentIds,
+			});
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
 	const isDisabled =
 		disabled || isSubmitting || hasUploadingFile || hasErroredFile || !trimmed;
 
@@ -89,7 +103,7 @@ const ChatInput = ({
 					<div className="mb-2">
 						<UploadFileList
 							files={files}
-							onRemoveFile={removeFile}
+							onRemoveFile={removeFileContext}
 							disabled={disabled}
 						/>
 					</div>
@@ -99,12 +113,11 @@ const ChatInput = ({
 					<DocumentUploader
 						files={files}
 						onFilesSelected={onFilesSelected}
-						onRemoveFile={removeFile}
+						onRemoveFile={removeFileContext}
 						disabled={disabled || isSubmitting}
 						multiple
 						className="flex h-10 w-10 items-center justify-center rounded-full"
 					/>
-
 					<Textarea
 						id="prompt"
 						value={prompt}
@@ -118,8 +131,6 @@ const ChatInput = ({
 							'leading-[1.2] focus-visible:ring-0 focus-visible:ring-offset-0',
 						)}
 					/>
-
-					{/* Send button, same size */}
 					<Button
 						type="submit"
 						size="icon"

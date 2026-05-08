@@ -14,6 +14,7 @@ from app.schemas.chat import (
     ConversationWithMessages,
     ConversationMessage,
     ConversationMessageCreate,
+    DeleteAttachedFileRequest
 )
 from app.schemas.rag import ConversationRAGUpdate
 
@@ -158,4 +159,60 @@ def get_messages(
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
     messages = ChatHistoryService.get_messages(db, conversation_id, skip=skip, limit=limit)
+    return messages
+
+@router.patch("/{conversation_id}/messages", response_model=List[ConversationMessage])
+def delete_attached_files(
+    conversation_id: UUID,
+    payload: DeleteAttachedFileRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Delete a single attached file from a specific message in a conversation.
+
+    - Validates that the conversation exists.
+    - Validates that the message belongs to that conversation.
+    - Removes the file with the given file_id from attached_files.
+    - Persists the updated message.
+    - Returns the updated list of messages for the conversation.
+    """
+    # 1) Ensure conversation exists
+    conversation = ChatHistoryService.get_conversation_with_messages(db, conversation_id)
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # 2) Find the message
+    target_message = next(
+        (m for m in conversation.messages if m.id == payload.message_id),
+        None,
+    )
+    if not target_message:
+        raise HTTPException(status_code=404, detail="Message not found in conversation")
+
+    # 3) If there are no attached files, nothing to delete
+    if not target_message.attached_files:
+        raise HTTPException(status_code=404, detail="No attached files on this message")
+
+    # 4) Filter attached_files by file_id
+    new_attached_files = [
+    f for f in target_message.attached_files
+      if f.get("file_id") != payload.file_id
+    ]
+
+    # If length didn't change, file_id was not found
+    if len(new_attached_files) == len(target_message.attached_files):
+        raise HTTPException(status_code=404, detail="File not found on this message")
+
+    # 5) Persist the change via a ChatHistoryService helper
+    # You can implement a simple "update message" service if you don't have one yet
+    updated_message = ChatHistoryService.update_message_attached_files(
+        db,
+        message_id=payload.message_id,
+        attached_files=new_attached_files,
+    )
+    if not updated_message:
+        raise HTTPException(status_code=500, detail="Failed to update message")
+
+    # 6) Return updated messages list for this conversation
+    messages = ChatHistoryService.get_messages(db, conversation_id)
     return messages

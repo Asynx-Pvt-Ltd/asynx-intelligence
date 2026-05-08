@@ -14,7 +14,7 @@ import {
 	mapHistoryToUiMessages,
 } from '../lib/chatHistory';
 import ConversationChatInput from './conversationChatInput';
-import ChatMessageList from './chatMessageList';
+import ChatMessageList from './messages/chatMessageList';
 import { useUploadStore } from '@/src/stores/document/uploadStore';
 import type { AttachedFile } from '@/src/features/documents/types/documentTypes';
 
@@ -27,6 +27,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isHydrating, setIsHydrating] = useState(true);
 	const [streamingIndex, setStreamingIndex] = useState<number | null>(null);
+	const [vectorIndex, setVectorIndex] = useState<string | undefined>();
 
 	const initializedRef = useRef(false);
 	const streamRunIdRef = useRef(0);
@@ -56,12 +57,14 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		const fileIdsToRemove = uploadedFiles.map((f) => f.id);
 
 		const userMsg: Message = {
+			id: '',
 			role: 'user',
 			content: trimmed,
 			attached_files: attachedFiles.length > 0 ? attachedFiles : undefined,
 		};
 
 		const assistantMsg: Message = {
+			id: '',
 			role: 'assistant',
 			content: '',
 		};
@@ -192,6 +195,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				const convo = await getConversation(chatId);
 				if (!cancelled) {
 					setMessages(mapHistoryToUiMessages(convo.messages ?? []));
+					setVectorIndex(convo.vector_index || undefined);
 				}
 			} catch {
 				if (!cancelled) {
@@ -228,9 +232,12 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 			<div className="flex-1 px-4 py-6">
 				<div className="flex flex-col gap-4">
 					<ChatMessageList
+						conversationId={chatId}
 						messages={messages}
 						isLoading={isLoading}
 						streamingIndex={streamingIndex}
+						setMessage={setMessages}
+						vectorIndex={vectorIndex}
 					/>
 					<div ref={bottomRef} />
 				</div>

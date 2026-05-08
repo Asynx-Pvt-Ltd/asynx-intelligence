@@ -36,12 +36,11 @@ const StarterChatInput = () => {
 		try {
 			const conversation = await createConversation({
 				title: 'Draft conversation',
+				is_draft: true,
 			});
 			conversationId = conversation.id;
 		} catch (error) {
 			console.error('Failed to create draft conversation:', error);
-			// Do NOT upload without a conversation ID
-			// Optionally show a toast/error to the user here
 			return;
 		}
 
@@ -118,6 +117,7 @@ const StarterChatInput = () => {
 			} else {
 				const conversation = await createConversation({
 					title: prompt.slice(0, 60),
+					is_draft: false,
 				});
 				conversationId = conversation.id;
 			}
