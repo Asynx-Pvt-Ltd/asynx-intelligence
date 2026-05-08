@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getConversation } from '../lib/chatHistory';
 import type { Conversation } from '../types/chatHistory';
-import ConversationActionsMenu from './ConversationActionsMenu';
+import ConversationActionsMenu from './conversationActionsMenu';
 import { useRouter } from 'next/navigation';
 
 interface ChatNavbarProps {
@@ -82,7 +82,7 @@ const ChatNavbar = ({
 	return (
 		<header
 			className={cn(
-				'flex h-16 items-center justify-between bg-background px-6 border-b border-border',
+				'flex h-16 items-center justify-between bg-background px-6',
 				className,
 			)}
 			style={style}
@@ -116,15 +116,6 @@ const ChatNavbar = ({
 			</div>
 
 			<div className="flex items-center gap-4">
-				<div className="hidden md:flex items-center gap-3">
-					<button className="px-3 py-1.5 text-sm rounded-md border border-input bg-background hover:bg-accent transition-colors">
-						Share
-					</button>
-					<button className="px-3 py-1.5 text-sm rounded-md border border-input bg-background hover:bg-accent transition-colors">
-						Export
-					</button>
-				</div>
-
 				<ConversationActionsMenu
 					conversationId={chatId}
 					currentTitle={conversation?.title || ''}
@@ -134,7 +125,6 @@ const ChatNavbar = ({
 						);
 					}}
 					onDeleted={() => {
-						// Redirect to home if we're viewing this conversation
 						if (window.location.pathname.includes(chatId)) {
 							router.push('/');
 						}

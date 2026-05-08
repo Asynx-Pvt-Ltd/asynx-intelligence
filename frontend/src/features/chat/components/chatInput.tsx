@@ -39,7 +39,6 @@ const ChatInput = ({
 	className,
 }: ChatInputProps) => {
 	const [prompt, setPrompt] = useState(defaultValue);
-
 	const { files, removeFile } = useUploadStore((s) => s);
 
 	const trimmed = prompt.trim();
@@ -48,7 +47,6 @@ const ChatInput = ({
 		() => files.some((file) => file.status === 'uploading'),
 		[files],
 	);
-
 	const hasErroredFile = useMemo(
 		() => files.some((file) => file.status === 'error'),
 		[files],
@@ -59,17 +57,13 @@ const ChatInput = ({
 
 	const handleSubmit = async (e?: FormEvent) => {
 		e?.preventDefault();
-
 		if (isDisabled) return;
 
 		const value = trimmed;
 		setPrompt('');
 
 		try {
-			await onSubmit({
-				prompt: value,
-				files,
-			});
+			await onSubmit({ prompt: value, files });
 		} catch (error) {
 			setPrompt(value);
 			throw error;
@@ -84,44 +78,48 @@ const ChatInput = ({
 	};
 
 	return (
-		<form
-			onSubmit={handleSubmit}
-			className={cn(
-				'h-full w-full bg-chat-input rounded-[28px] border shadow-sm',
-				className,
-			)}
-		>
-			<div>
-				{files.length > 0 ? (
-					<UploadFileList
-						files={files}
-						onRemoveFile={removeFile}
-						disabled={disabled}
-					/>
-				) : null}
+		<form onSubmit={handleSubmit}>
+			<div
+				className={cn(
+					'w-full rounded-[28px] bg-chat-input shadow-sm px-3 py-2',
+					className,
+				)}
+			>
+				{files.length > 0 && (
+					<div className="mb-2">
+						<UploadFileList
+							files={files}
+							onRemoveFile={removeFile}
+							disabled={disabled}
+						/>
+					</div>
+				)}
 
-				<Textarea
-					id="prompt"
-					value={prompt}
-					onChange={(e) => setPrompt(e.target.value)}
-					onKeyDown={handleKeyDown}
-					placeholder={placeholder}
-					disabled={disabled || isSubmitting}
-					className={cn(
-						'min-h-20 resize-none border-0 bg-transparent px-5 py-3  text-lg! shadow-none focus-visible:ring-0',
-						'placeholder:text-muted-foreground/80 placeholder:text-lg',
-					)}
-				/>
-
-				<div className="flex items-center justify-between px-4 pb-4">
+				<div className="flex h-10 items-center gap-2">
 					<DocumentUploader
 						files={files}
 						onFilesSelected={onFilesSelected}
 						onRemoveFile={removeFile}
 						disabled={disabled || isSubmitting}
-						multiple={true}
+						multiple
+						className="flex h-10 w-10 items-center justify-center rounded-full"
 					/>
 
+					<Textarea
+						id="prompt"
+						value={prompt}
+						onChange={(e) => setPrompt(e.target.value)}
+						onKeyDown={handleKeyDown}
+						placeholder={placeholder}
+						disabled={disabled || isSubmitting}
+						rows={1}
+						className={cn(
+							'flex-1 min-h-5 resize-none border-0 bg-transparent px-0 py-0 text-sm',
+							'leading-[1.2] focus-visible:ring-0 focus-visible:ring-offset-0',
+						)}
+					/>
+
+					{/* Send button, same size */}
 					<Button
 						type="submit"
 						size="icon"

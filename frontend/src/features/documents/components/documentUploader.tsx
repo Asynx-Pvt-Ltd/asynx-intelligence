@@ -120,7 +120,7 @@ export function DocumentUploader({
 					onClick={openFilePicker}
 					aria-label="Attach file"
 					className={cn(
-						'h-9 w-9 rounded-full border border-border bg-chat-input text-muted-foreground',
+						'h-9 w-9 rounded-full border border-border dark:bg-[#404450] bg-p[#E7E9F0] text-muted-foreground',
 						'shadow-[0_0_0_1px_rgba(0,0,0,0.02)]',
 						'hover:bg-muted hover:text-foreground hover:border-border',
 						'active:scale-95 transition-transform',
@@ -128,7 +128,7 @@ export function DocumentUploader({
 							'border-primary bg-muted/80 text-foreground hover:bg-muted hover:text-foreground',
 					)}
 				>
-					<Plus className="h-4 w-4" />
+					<Plus className="h-4 w-4 text-accent-foreground" />
 				</Button>
 			</div>
 		</div>

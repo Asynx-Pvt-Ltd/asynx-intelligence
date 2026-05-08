@@ -1,20 +1,21 @@
 'use client';
 
 import { Button } from '@/src/components/ui/button';
+import Logo from '@/src/components/ui/logo';
 import { ThemeToggle } from '@/src/components/ui/themeToggle';
 import { cn } from '@/src/lib/utils';
 import { useChatSidebarStore } from '@/src/stores/chat/chatSidebarStore';
 import { useChatStore } from '@/src/stores/chat/chatStore';
 import { OrganizationSwitcher } from '@clerk/nextjs';
-import { MessageSquare, PanelLeft, PenSquare } from 'lucide-react';
+import { PanelLeft, PenSquare, Search } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import ConversationActionsMenu from '../../chat/components/conversationActionsMenu';
 import { getConversations } from '../../chat/lib/chatHistory';
 import { Conversation } from '../../chat/types/chatHistory';
 import SignOutButton from './signOutButton';
-import ConversationActionsMenu from '../../chat/components/ConversationActionsMenu';
-import Logo from '@/src/components/ui/logo';
+import { Input } from '@/src/components/ui/input';
 
 interface SidebarProps {
 	className?: string;
@@ -26,6 +27,7 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 	const pathname = usePathname();
 	const [chats, setChats] = useState<Conversation[]>([]);
 	const [search, setSearch] = useState('');
+	const [hoveredId, setHoveredId] = useState<string | null>(null);
 
 	const conversationsDirty = useChatStore((s) => s.conversationsDirty);
 
@@ -109,14 +111,16 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 						<PenSquare className="mr-2 h-4 w-4" />
 						New Chat
 					</Button>
-
-					<input
-						type="text"
-						className="h-8 w-full rounded-lg border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						placeholder="Search conversations"
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-					/>
+					<div className="relative">
+						<Search className="absolute top-2.5 left-3 w-3 h-3 text-[#575B65]" />
+						<Input
+							type="text"
+							className="rounded-md! pl-8! py-2! h-8 w-full bg-[#D6D6D6]! px-2 text-sm outline-none text-black  placeholder:text-[#575B65] placeholder:text-sm"
+							placeholder="Search..."
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
+						/>
+					</div>
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-3 pb-2">
@@ -125,11 +129,16 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 					</div>
 
 					<div className="space-y-1">
-						{filteredChats.map((chat) => {
+						{filteredChats.map((chat, index) => {
 							const isActive = pathname === `/chat/${chat.id}`;
-
+							const isLastIndex = filteredChats.length - 1 === index;
+							const isHovered = hoveredId === chat.id;
 							return (
 								<Link
+									onMouseEnter={() => setHoveredId(chat.id)}
+									onMouseLeave={() =>
+										setHoveredId((prev) => (prev === chat.id ? null : prev))
+									}
 									key={chat.id}
 									href={`/chat/${chat.id}`}
 									className={cn(
@@ -140,23 +149,17 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 									)}
 									title={chat.title || 'Untitled Chat'}
 								>
-									{/* Left: title */}
 									<span className="line-clamp-2 flex-1 text-left">
 										{chat.title || 'Untitled Chat'}
 									</span>
 
-									{/* Right: three-dot menu; stop click from triggering Link */}
-									<div
-										onClick={(e) => {
-											e.preventDefault();
-											e.stopPropagation();
-										}}
-									>
-										<ConversationActionsMenu
-											conversationId={chat.id}
-											className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
-										/>
-									</div>
+									<RowMenuWrapper
+										chatId={chat.id}
+										chatTitle={chat.title || ''}
+										isActive={isActive}
+										isLastIndex={isLastIndex}
+										isHovered={isHovered}
+									/>
 								</Link>
 							);
 						})}
@@ -168,3 +171,42 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 };
 
 export default Sidebar;
+
+const RowMenuWrapper = ({
+	chatId,
+	chatTitle,
+	isActive,
+	isLastIndex,
+	isHovered,
+}: {
+	chatId: string;
+	chatTitle: string;
+	isActive: boolean;
+	isLastIndex: boolean;
+	isHovered: boolean;
+}) => {
+	const [menuOpen, setMenuOpen] = useState(false);
+
+	const shouldShow = isActive || isHovered || menuOpen;
+
+	return (
+		<div
+			className={cn(
+				'transition-opacity',
+				shouldShow ? 'opacity-100' : 'opacity-0',
+			)}
+			onClick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+			}}
+		>
+			<ConversationActionsMenu
+				conversationId={chatId}
+				currentTitle={chatTitle}
+				placement={isLastIndex ? 'top' : 'bottom'}
+				className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+				onOpenChange={setMenuOpen}
+			/>
+		</div>
+	);
+};
