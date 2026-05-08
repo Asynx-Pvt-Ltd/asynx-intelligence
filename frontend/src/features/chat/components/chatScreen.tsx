@@ -26,6 +26,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [isHydrating, setIsHydrating] = useState(true);
+	const [streamingIndex, setStreamingIndex] = useState<number | null>(null);
 
 	const initializedRef = useRef(false);
 	const streamRunIdRef = useRef(0);
@@ -67,7 +68,11 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 
 		const baseMessages = messagesRef.current;
 
-		setMessages((prev) => [...prev, userMsg, assistantMsg]);
+		setMessages((prev) => {
+			const next = [...prev, userMsg, assistantMsg];
+			setStreamingIndex(next.length - 1);
+			return next;
+		});
 		setIsLoading(true);
 
 		try {
@@ -125,6 +130,8 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				return [...prev.slice(0, lastIndex), updatedAssistant];
 			});
 
+			setStreamingIndex(null);
+
 			await addConversationMessage(chatId, {
 				role: 'assistant',
 				content: fullContent,
@@ -149,6 +156,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 
 				return [...prev.slice(0, lastIndex), updatedAssistant];
 			});
+			setStreamingIndex(null);
 		} finally {
 			if (streamRunIdRef.current === currentRunId) {
 				setIsLoading(false);
@@ -156,6 +164,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				fileIdsToRemove.forEach((id) => {
 					useUploadStore.getState().removeFile(id);
 				});
+				setStreamingIndex(null);
 			}
 		}
 	};
@@ -216,14 +225,18 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 
 	return (
 		<div className="mx-auto flex h-full w-full max-w-4xl flex-col">
-			<div className="flex-1 px-4 py-6">
+			<div className="flex-1 overflow-y-auto px-4 py-6">
 				<div className="flex flex-col gap-4">
-					<ChatMessageList messages={messages} isLoading={isLoading} />
+					<ChatMessageList
+						messages={messages}
+						isLoading={isLoading}
+						streamingIndex={streamingIndex}
+					/>
 					<div ref={bottomRef} />
 				</div>
 			</div>
 
-			<div className="mb-6 px-4">
+			<div className="shrink-0 px-4 pb-6 pt-2">
 				<ConversationChatInput
 					onSendMessage={sendMessage}
 					disabled={isHydrating || isLoading}
