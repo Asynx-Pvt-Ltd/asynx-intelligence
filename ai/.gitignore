@@ -77,3 +77,4 @@ alembic.env
 
 # Misc
 .scratch/
+uv.lock
