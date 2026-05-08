@@ -8,6 +8,7 @@ import { getConversation } from '../lib/chatHistory';
 import type { Conversation } from '../types/chatHistory';
 import ConversationActionsMenu from './conversationActionsMenu';
 import { useRouter } from 'next/navigation';
+import { useChatStore } from '@/src/stores/chat/chatStore';
 
 interface ChatNavbarProps {
 	chatId: string;
@@ -23,6 +24,7 @@ const ChatNavbar = ({
 	const [conversation, setConversation] = useState<Conversation | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const conversationsDirty = useChatStore((s) => s.conversationsDirty);
 	const router = useRouter();
 
 	useEffect(() => {
@@ -56,7 +58,7 @@ const ChatNavbar = ({
 		return () => {
 			mounted = false;
 		};
-	}, [chatId]);
+	}, [chatId, conversationsDirty]);
 
 	const displayTitle = () => {
 		if (isLoading) {
@@ -99,14 +101,7 @@ const ChatNavbar = ({
 				<div className="h-6 w-px bg-border" />
 
 				<div className="flex flex-col">
-					<div className="flex items-center gap-2">
-						{displayTitle()}
-						{conversation?.is_draft && (
-							<span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-								Draft
-							</span>
-						)}
-					</div>
+					<div className="flex items-center gap-2">{displayTitle()}</div>
 					{conversation && !isLoading && (
 						<p className="text-xs text-muted-foreground mt-0.5">
 							{conversation.messages?.length || 0} messages
