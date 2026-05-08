@@ -1,9 +1,0 @@
-.venv
-venv
-env
-__pycache__
-.git
-*.safetensors
-*.bin
-*.pt
-*.pth
