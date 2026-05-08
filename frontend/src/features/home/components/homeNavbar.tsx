@@ -1,7 +1,4 @@
-'use client';
-
 import { cn } from '@/src/lib/utils';
-import { usePathname } from 'next/navigation';
 
 interface HomeNavbarProps {
 	className?: string;
@@ -9,12 +6,10 @@ interface HomeNavbarProps {
 }
 
 const HomeNavbar = ({ className = '', style = {} }: HomeNavbarProps) => {
-	const pathname = usePathname();
-
 	return (
 		<header
 			className={cn(
-				'flex h-16 items-center justify-between bg-background px-6 border-b border-border',
+				'flex h-16 items-center justify-between bg-background px-6',
 				className,
 			)}
 			style={style}

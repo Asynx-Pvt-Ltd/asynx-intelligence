@@ -35,7 +35,7 @@ const UploadFileList = ({
 					{onRemoveFile ? (
 						<button
 							type="button"
-							onClick={() => onRemoveFile(item.id)}
+							onClick={() => onRemoveFile(item)}
 							disabled={disabled}
 							className="inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground transition hover:bg-background hover:text-foreground"
 							aria-label={`Remove ${item.file.name}`}
