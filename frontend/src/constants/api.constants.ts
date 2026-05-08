@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
 		STREAM: '/chat/stream',
 		RESPONSE: '/chat/response',
 		HISTORY: '/chat/history',
+		MESSAGES: '/messages',
 	},
 
 	RAG: {

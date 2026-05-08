@@ -4,6 +4,7 @@ import { UploadingFile } from '../../documents/components/documentUploader';
 export type MessageRole = 'system' | 'user' | 'assistant';
 
 export interface Message {
+	id: string;
 	role: MessageRole;
 	content: string;
 	attached_files?: AttachedFile[];

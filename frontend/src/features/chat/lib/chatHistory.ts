@@ -130,8 +130,38 @@ export async function deleteConversation(conversationId: string) {
 	return res.json();
 }
 
+export async function deleteAttachedFileFromMessage({
+	conversationId,
+	messageId,
+	fileId,
+}: {
+	conversationId: string;
+	messageId: string;
+	fileId: string;
+}) {
+	const res = await fetch(
+		`${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}/${conversationId}${API_ENDPOINTS.CHAT.MESSAGES}`,
+		{
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				message_id: messageId,
+				file_id: fileId,
+			}),
+			cache: 'no-store',
+		},
+	);
+
+	if (!res.ok) {
+		throw new Error('Failed to delete uploaded file');
+	}
+
+	return res.json();
+}
+
 export function mapHistoryToUiMessages(messages: HistoryMessage[]): Message[] {
 	return messages.map((message) => ({
+		id: message.id,
 		role: message.role,
 		content: message.content,
 		attached_files: message.attached_files,
