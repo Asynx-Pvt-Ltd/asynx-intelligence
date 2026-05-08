@@ -77,9 +77,7 @@ class ChatHistoryService:
         if not db_conversation:
             return None
         update_data = conversation_in.model_dump(exclude_unset=True)
-        # Remove document_ids from update data (deprecated, stored per message)
-        if "document_ids" in update_data:
-            del update_data["document_ids"]
+        
         for field, value in update_data.items():
             setattr(db_conversation, field, value)
         db.add(db_conversation)

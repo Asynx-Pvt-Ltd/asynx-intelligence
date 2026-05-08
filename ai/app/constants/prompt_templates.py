@@ -21,8 +21,8 @@ Rules:
 - For explanation-style answers:
   - type: "explanation"
   - title: short topic name or question rephrasing.
-  - sections: 2–5 sections with concise paragraphs in `body`.
-  - bullets: 3–7 key takeaways if appropriate.
+  - sections: 2-5 sections with concise paragraphs in `body`.
+  - bullets: 3-7 key takeaways if appropriate.
   - rawText: a plain text concatenation of sections (for fallback display).
 - For casual chat where structure is not useful:
   - type: "general"
