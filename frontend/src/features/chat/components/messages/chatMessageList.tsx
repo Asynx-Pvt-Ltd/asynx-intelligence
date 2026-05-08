@@ -5,18 +5,67 @@ import AssisstantMessageBubble from './assisstantMessageBubble';
 import ChatMessageItem from './chatMessageItem';
 import UploadFileChip from './uploadFileChip';
 import UserMessageBubble from './userMessageBubble';
+import { Dispatch, SetStateAction } from 'react';
+import { AttachedFile } from '@/src/features/documents/types/documentTypes';
+import { deleteRagDocuments } from '@/src/features/documents/lib/ragClient';
+import { deleteAttachedFileFromMessage } from '../../lib/chatHistory';
 
 interface ChatMessageListProps {
 	messages: Message[];
 	isLoading: boolean;
 	streamingIndex: number | null;
+	setMessage: Dispatch<SetStateAction<Message[]>>;
+	vectorIndex: string | undefined;
+	conversationId: string;
 }
 
 const ChatMessageList = ({
 	messages,
 	isLoading,
 	streamingIndex,
+	setMessage,
+	vectorIndex,
+	conversationId,
 }: ChatMessageListProps) => {
+	const removeUploadedFile = async ({
+		file,
+		index,
+		messageId,
+	}: {
+		file: AttachedFile;
+		index: number;
+		messageId: string;
+	}) => {
+		setMessage((prev) =>
+			prev.map((msg, idx) =>
+				idx === index
+					? {
+							...msg,
+							attached_files: msg.attached_files?.filter(
+								(ath) => ath.file_id !== file.file_id,
+							),
+						}
+					: msg,
+			),
+		);
+
+		if (!file.document_ids || !vectorIndex) return;
+		try {
+			await Promise.all([
+				deleteAttachedFileFromMessage({
+					conversationId: conversationId,
+					fileId: file.file_id,
+					messageId: messageId,
+				}),
+				deleteRagDocuments({
+					document_ids: file.document_ids,
+					vector_index: vectorIndex,
+				}),
+			]);
+		} catch (error) {
+			console.log(error);
+		}
+	};
 	return (
 		<>
 			{messages.map((message, index) => {
@@ -65,7 +114,11 @@ const ChatMessageList = ({
 									message={message}
 									structured={structured}
 								/>
-								<UploadFileChip message={message} />
+								<UploadFileChip
+									message={message}
+									index={index}
+									onRemoveFile={removeUploadedFile}
+								/>
 							</div>
 						</div>
 					</div>

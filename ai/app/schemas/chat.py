@@ -87,3 +87,8 @@ class ConversationMessage(ConversationMessageBase):
 
 class ConversationWithMessages(Conversation):
     messages: List[ConversationMessage] = []
+
+
+class DeleteAttachedFileRequest(BaseModel):
+    message_id: UUID
+    file_id: str
