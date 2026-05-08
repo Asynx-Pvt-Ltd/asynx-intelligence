@@ -28,7 +28,7 @@ export type UploadingFile = {
 export type DocumentUploaderProps = {
 	files: UploadingFile[];
 	onFilesSelected: (files: File[]) => void;
-	onRemoveFile?: (id: string) => void;
+	onRemoveFile?: (file: UploadingFile) => void;
 	accept?: string;
 	multiple?: boolean;
 	disabled?: boolean;

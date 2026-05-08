@@ -38,7 +38,10 @@ export async function getConversation(
 	return res.json();
 }
 
-export async function createConversation(payload: { title: string }) {
+export async function createConversation(payload: {
+	title: string;
+	is_draft?: boolean;
+}) {
 	const res = await fetch(`${API_BASE}${API_ENDPOINTS.CHAT.HISTORY}`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
