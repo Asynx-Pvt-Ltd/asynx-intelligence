@@ -14,7 +14,7 @@ import {
 	mapHistoryToUiMessages,
 } from '../lib/chatHistory';
 import ConversationChatInput from './conversationChatInput';
-import ChatMessageList from './chatMessageList';
+import ChatMessageList from './messages/chatMessageList';
 import { useUploadStore } from '@/src/stores/document/uploadStore';
 import type { AttachedFile } from '@/src/features/documents/types/documentTypes';
 
