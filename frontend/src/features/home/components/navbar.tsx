@@ -1,5 +1,6 @@
+'use client';
+
 import { cn } from '@/src/lib/utils';
-import { useOrganization } from '@clerk/nextjs';
 
 const Navbar = ({
 	className = '',
@@ -8,7 +9,6 @@ const Navbar = ({
 	className?: string;
 	style?: {};
 }) => {
-	const { organization } = useOrganization();
 	return (
 		<header
 			className={cn(
@@ -16,9 +16,7 @@ const Navbar = ({
 				className,
 			)}
 			style={style}
-		>
-			<h1 className="font-semibold text-xl">{organization?.name}</h1>
-		</header>
+		></header>
 	);
 };
 
