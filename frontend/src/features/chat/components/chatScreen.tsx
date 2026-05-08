@@ -225,7 +225,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 
 	return (
 		<div className="mx-auto flex h-full w-full max-w-4xl flex-col">
-			<div className="flex-1 overflow-y-auto px-4 py-6">
+			<div className="flex-1 px-4 py-6">
 				<div className="flex flex-col gap-4">
 					<ChatMessageList
 						messages={messages}
@@ -236,12 +236,18 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				</div>
 			</div>
 
-			<div className="shrink-0 px-4 pb-6 pt-2">
-				<ConversationChatInput
-					onSendMessage={sendMessage}
-					disabled={isHydrating || isLoading}
-					conversationId={chatId}
-				/>
+			<div className="sticky bottom-0 z-10">
+				<div className="relative mx-4 pb-4 pt-2">
+					<div className="pointer-events-none absolute inset-0 bg-linear-to-t from-chat-screen via-chat-screen/80 to-transparent backdrop-blur-lg" />
+
+					<div className="relative">
+						<ConversationChatInput
+							onSendMessage={sendMessage}
+							disabled={isHydrating || isLoading}
+							conversationId={chatId}
+						/>
+					</div>
+				</div>
 			</div>
 		</div>
 	);

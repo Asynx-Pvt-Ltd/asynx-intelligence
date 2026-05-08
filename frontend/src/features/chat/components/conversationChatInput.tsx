@@ -100,6 +100,7 @@ const ConversationChatInput = ({
 			isSubmitting={isSubmitting}
 			disabled={disabled}
 			placeholder="Ask a follow-up"
+			className="rounded-md"
 		/>
 	);
 };
