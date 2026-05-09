@@ -118,21 +118,6 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 
 			if (streamRunIdRef.current !== currentRunId) return;
 
-			setMessages((prev) => {
-				const lastIndex = prev.length - 1;
-				if (lastIndex < 0) return prev;
-
-				const last = prev[lastIndex];
-				if (last.role !== 'assistant') return prev;
-
-				const updatedAssistant: Message = {
-					...last,
-					content: fullContent,
-				};
-
-				return [...prev.slice(0, lastIndex), updatedAssistant];
-			});
-
 			setStreamingIndex(null);
 
 			await addConversationMessage(chatId, {
@@ -163,7 +148,6 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		} finally {
 			if (streamRunIdRef.current === currentRunId) {
 				setIsLoading(false);
-				// Remove uploaded files after sending
 				fileIdsToRemove.forEach((id) => {
 					useUploadStore.getState().removeFile(id);
 				});
