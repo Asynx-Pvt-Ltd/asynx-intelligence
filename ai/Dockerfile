@@ -31,4 +31,4 @@ USER appuser
 EXPOSE 8000
 
 # ---------- Start command ----------
-CMD ["sh", "-c", "alembic upgrade head 2>/dev/null || true && exec gunicorn app.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120"]
+CMD ["sh", "-c", "exec gunicorn app.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120"]
