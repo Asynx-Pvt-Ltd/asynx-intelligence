@@ -10,24 +10,14 @@ dependencies = [
     "langchain-openai>=1.1.9",
     "langchain-postgres>=0.0.17",
     "langchain-text-splitters>=1.1.1",
-    "marker-pdf>=1.10.2",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
     "psycopg[binary]>=3.2.10",
     "python-multipart>=0.0.22",
     "sentry-sdk[fastapi]>=2.53.0",
     "uvicorn>=0.41.0",
-    "llama-parse>=0.6.94",
+    "gunicorn>=21.2.0",
     "psycopg2-binary>=2.9.12",
+    "pypdf>=4.0.0",
     "alembic>=1.18.4",
 ]
-
-[[tool.uv.index]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
-explicit = true
-
-[tool.uv.sources]
-torch = { index = "pytorch-cpu" }
-torchvision = { index = "pytorch-cpu" }
-torchaudio = { index = "pytorch-cpu" }

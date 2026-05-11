@@ -36,12 +36,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 				) : (
 					<HomeNavbar className="sticky top-0 z-30 h-16" />
 				)}
-				<main
-					className={cn(
-						'flex-1 overflow-y-auto',
-						isChatRoute && 'bg-chat-screen',
-					)}
-				>
+				<main className={cn('flex-1 overflow-y-auto', 'bg-chat-screen')}>
 					{children}
 				</main>
 			</div>

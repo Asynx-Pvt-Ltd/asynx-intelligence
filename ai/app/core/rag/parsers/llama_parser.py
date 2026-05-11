@@ -1,6 +1,6 @@
 from typing import Dict
 
-from llama_parse import LlamaParse
+from pypdf import PdfReader
 
 from .base import (
     BaseDocumentParser,
@@ -12,38 +12,36 @@ from .base import (
 
 class LlamaParser(BaseDocumentParser):
     def __init__(self, config: Dict | None = None):
-        from app.core.config import settings
-
-        api_key = getattr(settings, "LLAMA_CLOUD_API_KEY", None)
-        if not api_key:
-            raise ParserInitError(
-                "LLAMA_CLOUD_API_KEY is not set. "
-                "Add it to your .env to use the 'speed' parser strategy."
-            )
-
-        resolved_config = config or {}
-        try:
-            self.parser = LlamaParse(
-                api_key=api_key,
-                result_type=resolved_config.get("result_type", "markdown"),
-                verbose=resolved_config.get("verbose", False),
-            )
-        except Exception as e:
-            raise ParserInitError(f"Failed to initialize LlamaParser: {e}") from e
+        # No API key needed for pypdf
+        # Config can be used for PdfReader options if needed
+        self.config = config or {}
 
     def parse(self, pdf_path: str) -> ParseResult:
         self._validate_path(pdf_path)
+        
         try:
-            documents = self.parser.load_data(pdf_path)
+            reader = PdfReader(pdf_path)
         except Exception as e:
             raise DocumentConversionError(
-                f"LlamaParser failed to convert '{pdf_path}': {e}"
+                f"Failed to open PDF file '{pdf_path}': {e}"
             ) from e
 
-        if not documents:
+        pages_text = []
+        for page_num, page in enumerate(reader.pages, start=1):
+            try:
+                text = page.extract_text()
+                if text and text.strip():
+                    pages_text.append(text.strip())
+            except Exception as e:
+                # If a page fails, we can skip it or raise error.
+                # For robustness, we skip and continue.
+                # Logging could be added here.
+                pass
+
+        if not pages_text:
             raise DocumentConversionError(
-                f"LlamaParser returned no content for '{pdf_path}'."
+                f"No extractable text found in PDF '{pdf_path}'"
             )
 
-        raw_corpus = "\n\n---\n\n".join(doc.text for doc in documents)
+        raw_corpus = "\n\n---\n\n".join(pages_text)
         return raw_corpus, "md", {}
