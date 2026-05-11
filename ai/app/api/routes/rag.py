@@ -35,7 +35,7 @@ async def upload_document(
     chunk_overlap: int = Form(default=50, ge=0, description="Overlap between chunks."),
     parser_strategy: Literal["quality", "speed"] = Form(
         default="speed",
-        description="Parser strategy: 'quality' (marker-pdf) or 'speed' (llama-parse).",
+        description="Parser strategy: 'quality' (marker-pdf) or 'speed' (pypdf).",
     ),
     db: Session = Depends(get_db),
 ):

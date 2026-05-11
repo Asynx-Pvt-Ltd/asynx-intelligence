@@ -14,6 +14,7 @@ import {
 } from '../../documents/components/documentUploader';
 import UploadFileList from '../../documents/components/uploadFileList';
 import { deleteRagDocuments } from '../../documents/lib/ragClient';
+import { VoiceInputButton } from '@/src/components/shared/voiceInputButton';
 
 type ChatSubmitPayload = {
 	prompt: string;
@@ -131,6 +132,19 @@ const ChatInput = ({
 							'leading-[1.2] focus-visible:ring-0 focus-visible:ring-offset-0',
 						)}
 					/>
+					{/* // TODO: DO IT LATER */}
+					{/* <VoiceInputButton
+						disabled={isSubmitting}
+						className=""
+						showLabel={true}
+						onTranscript={(text) => {
+							setPrompt((prev) => {
+								console.log('TEXT :', text);
+								const base = prev.trim().length > 0 ? prev + ' ' : '';
+								return base + text;
+							});
+						}}
+					/> */}
 					<Button
 						type="submit"
 						size="icon"

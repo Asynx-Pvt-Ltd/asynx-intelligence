@@ -1,8 +1,5 @@
 from typing import Dict
-from marker.models import create_model_dict
-from marker.output import text_from_rendered
-from marker.config.parser import ConfigParser
-from marker.converters.pdf import PdfConverter
+from pypdf import PdfReader
 
 from .base import (
     BaseDocumentParser,
@@ -11,39 +8,46 @@ from .base import (
     ParserInitError,
 )
 
-_DEFAULT_CONFIG: Dict = {
-    "output_format": "markdown",
-    "paginate_output": True,
-}
-
 
 class MarkerParser(BaseDocumentParser):
+    """
+    Lightweight PDF parser using pypdf.
+    Replaces Marker ML-based parser.
+    """
+
     def __init__(self, config: Dict | None = None):
-        resolved_config = config or _DEFAULT_CONFIG
-        try:
-            config_parser = ConfigParser(resolved_config)
-            self.converter = PdfConverter(
-                renderer=config_parser.get_renderer(),
-                artifact_dict=create_model_dict(),
-                config=resolved_config,
-            )
-        except Exception as e:
-            raise ParserInitError(f"Failed to initialize MarkerParser: {e}") from e
+        # No heavy model initialization needed
+        self.config = config or {}
 
     def parse(self, pdf_path: str) -> ParseResult:
         self._validate_path(pdf_path)
+
         try:
-            rendered = self.converter(pdf_path)
+            reader = PdfReader(pdf_path)
         except Exception as e:
             raise DocumentConversionError(
-                f"MarkerParser failed to convert '{pdf_path}': {e}"
+                f"Failed to open PDF '{pdf_path}': {e}"
             ) from e
 
         try:
-            raw_corpus, fmt, images = text_from_rendered(rendered)
+            pages_text = []
+
+            for page_number, page in enumerate(reader.pages):
+                text = page.extract_text()
+                if text:
+                    pages_text.append(f"\n\n--- Page {page_number + 1} ---\n\n{text}")
+
+            if not pages_text:
+                raise DocumentConversionError(
+                    f"No extractable text found in '{pdf_path}'."
+                )
+
+            raw_corpus = "\n".join(pages_text)
+
         except Exception as e:
             raise DocumentConversionError(
-                f"Failed to extract text from rendered output: {e}"
+                f"Failed to extract text from '{pdf_path}': {e}"
             ) from e
 
-        return raw_corpus, fmt, images
+        # Keep return format consistent with your system
+        return raw_corpus, "md", {}
