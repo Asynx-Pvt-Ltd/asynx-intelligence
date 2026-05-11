@@ -63,7 +63,7 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 			<div className="flex w-16 flex-col items-center justify-between dark:bg-[#1E1F22] px-2 py-3 not-dark:border-r border-r-gray-300">
 				<div className="flex flex-col items-center gap-4">
 					<div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
-						<Logo />
+						<Logo className="h-7 w-7" />
 					</div>
 
 					<Button
@@ -105,7 +105,7 @@ const Sidebar = ({ className = '', style = {}, onNewChat }: SidebarProps) => {
 				<div className="flex w-full flex-col gap-2 px-3 py-3">
 					<Button
 						onClick={onNewChat}
-						className="w-full justify-start rounded-xl"
+						className="w-full justify-start rounded-xl px-3"
 						aria-label="New chat"
 					>
 						<PenSquare className="mr-2 h-4 w-4" />
