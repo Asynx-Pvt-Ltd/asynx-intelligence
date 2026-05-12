@@ -143,7 +143,9 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		} finally {
 			if (streamRunIdRef.current === currentRunId) {
 				setIsLoading(false);
-				fileIdsToRemove.forEach((id) => useUploadStore.getState().removeFile(id));
+				fileIdsToRemove.forEach((id) =>
+					useUploadStore.getState().removeFile(id),
+				);
 				setStreamingIndex(null);
 			}
 		}
@@ -221,7 +223,10 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 					<div
 						key={i}
 						className={`h-12 rounded-2xl shimmer`}
-						style={{ width: `${w}%`, alignSelf: i % 2 === 0 ? 'flex-end' : 'flex-start' }}
+						style={{
+							width: `${w}%`,
+							alignSelf: i % 2 === 0 ? 'flex-end' : 'flex-start',
+						}}
 					/>
 				))}
 			</div>

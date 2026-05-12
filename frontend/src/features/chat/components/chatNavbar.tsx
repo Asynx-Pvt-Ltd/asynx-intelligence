@@ -4,14 +4,7 @@ import { cn } from '@/src/lib/utils';
 import { useChatStore } from '@/src/stores/chat/chatStore';
 import { useChatSidebarStore } from '@/src/stores/chat/chatSidebarStore';
 import { motion } from 'framer-motion';
-import {
-	Check,
-	Loader2,
-	PanelLeft,
-	Pencil,
-	Share2,
-	X,
-} from 'lucide-react';
+import { Check, Loader2, PanelLeft, Pencil, Share2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { getConversation, updateConversation } from '../lib/chatHistory';
@@ -115,24 +108,6 @@ export default function ChatNavbar({ chatId, className }: ChatNavbarProps) {
 		>
 			{/* Left: toggle + logo dot + title */}
 			<div className="flex items-center gap-2 min-w-0 flex-1">
-				{!isOpen && (
-					<button
-						onClick={toggle}
-						aria-label="Open sidebar"
-						className={cn(
-							'flex items-center justify-center h-7 w-7 rounded-lg shrink-0',
-							'text-muted-foreground hover:text-foreground hover:bg-muted/60',
-							'transition-colors duration-150',
-						)}
-					>
-						<PanelLeft className="h-4 w-4" />
-					</button>
-				)}
-
-				<div className="h-5 w-5 rounded-full bg-primary shrink-0 flex items-center justify-center overflow-hidden">
-					<Logo imageStyles="w-4 h-4 object-contain" />
-				</div>
-
 				<div className="min-w-0 flex-1">
 					{isLoading ? (
 						<div className="h-4 w-32 rounded shimmer" />

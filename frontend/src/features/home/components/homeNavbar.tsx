@@ -28,24 +28,7 @@ const HomeNavbar = ({ className }: HomeNavbarProps) => {
 		>
 			{/* Left: toggle + wordmark */}
 			<div className="flex items-center gap-2.5">
-				{!isOpen && (
-					<button
-						onClick={toggle}
-						aria-label="Open sidebar"
-						className={cn(
-							'flex items-center justify-center h-7 w-7 rounded-lg',
-							'text-muted-foreground hover:text-foreground hover:bg-muted/60',
-							'transition-colors duration-150',
-						)}
-					>
-						<PanelLeft className="h-4 w-4" />
-					</button>
-				)}
-
 				<div className="flex items-center gap-2">
-					<div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center overflow-hidden">
-						<Logo imageStyles="w-4 h-4 object-contain" />
-					</div>
 					<span className="text-sm font-semibold tracking-tight text-foreground">
 						Asynx
 					</span>
