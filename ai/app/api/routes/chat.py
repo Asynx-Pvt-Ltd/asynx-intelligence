@@ -11,7 +11,7 @@ from app.schemas.chat import ChatRequest, ChatResponse
 from app.core.llm import LLMService, _extract_reasoning
 from app.core.chat_history import ChatHistoryService
 
-from app.constants.prompt_templates import STRUCTURED_OUTPUT_SYSTEM_PROMPT
+from app.constants.prompt_templates import STRUCTURED_OUTPUT_SYSTEM_PROMPT,DOCUMENT_CONTEXT_SYSTEM_PROMPT
 
 # Chat history sub‑router
 from app.api.routes import chat_history
@@ -57,7 +57,7 @@ async def stream_chat_response(
     try:
         rag_context = _retrieve_context(
             conversation_id=request.conversation_id,
-            vector_index=None,  # Will be loaded from conversation if conversation_id provided
+            vector_index=None,
             query=last_user_msg,
             k=request.k,
             db=db
@@ -72,7 +72,15 @@ async def stream_chat_response(
        "content": STRUCTURED_OUTPUT_SYSTEM_PROMPT.strip(),
     }
     
-    messages_with_structure = [structured_system] + messages_dicts
+    messages_with_structure = [structured_system]
+
+    if rag_context:
+        messages_with_structure.append({
+            "role":"system",
+            'content':DOCUMENT_CONTEXT_SYSTEM_PROMPT.strip()
+        })
+        
+    messages_with_structure.extend(messages_dicts)
 
     async def event_generator():
         try:
