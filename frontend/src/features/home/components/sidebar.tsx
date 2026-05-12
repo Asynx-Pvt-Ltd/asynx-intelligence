@@ -90,8 +90,8 @@ const Sidebar = ({
 		void fetchConversations();
 	}, [conversationsDirty]);
 
-	const filteredChats = chats.filter(
-		(c) => !c.is_draft && c.title?.toLowerCase().includes(search.toLowerCase()),
+	const filteredChats = chats.filter((c) =>
+		c.title?.toLowerCase().includes(search.toLowerCase()),
 	);
 
 	const groups = groupByDate(filteredChats);
@@ -229,16 +229,6 @@ const Sidebar = ({
 							'transition-colors duration-150',
 						)}
 					/>
-
-					{search && (
-						<button
-							onClick={() => setSearch('')}
-							className="absolute right-6 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-sidebar-foreground"
-							aria-label="Clear search"
-						>
-							<X className={SIDEBAR_INPUT_ICON_SIZE} />
-						</button>
-					)}
 				</div>
 
 				<div className="flex-1 overflow-y-auto px-2 pb-2 scrollbar-thin">
@@ -285,10 +275,10 @@ const Sidebar = ({
 														}
 														title={chat.title || 'Untitled Chat'}
 														className={cn(
-															'group flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-xs',
+															'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs min-w-0',
 															'transition-colors duration-150',
 															isActive
-																? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+																? 'bg-sidebar-accent text-sidebar-foreground'
 																: 'text-sidebar-foreground/60 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground',
 														)}
 													>
@@ -337,31 +327,34 @@ const RowMenuWrapper = ({
 	const shouldShow = isActive || isHovered || menuOpen;
 
 	return (
-		<AnimatePresence>
-			{shouldShow && (
-				<motion.div
-					initial={{ opacity: 0, x: 4 }}
-					animate={{ opacity: 1, x: 0 }}
-					exit={{ opacity: 0, x: 4 }}
-					transition={{ duration: 0.12 }}
-					onClick={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-					}}
-					className="shrink-0"
-				>
-					<ConversationActionsMenu
-						conversationId={chatId}
-						currentTitle={chatTitle}
-						placement={isLastInGroup ? 'top' : 'bottom'}
-						className={cn(
-							'h-6 w-6 flex items-center justify-center rounded-md',
-							'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-border',
-						)}
-						onOpenChange={setMenuOpen}
-					/>
-				</motion.div>
-			)}
-		</AnimatePresence>
+		<div
+			className="shrink-0 w-6 h-6 flex items-center justify-center"
+			onClick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+			}}
+		>
+			<motion.div
+				initial={false}
+				animate={{
+					opacity: shouldShow ? 1 : 0,
+					x: shouldShow ? 0 : 4,
+					pointerEvents: shouldShow ? 'auto' : 'none',
+				}}
+				transition={{ duration: 0.12 }}
+				className="w-6 h-6"
+			>
+				<ConversationActionsMenu
+					conversationId={chatId}
+					currentTitle={chatTitle}
+					placement={isLastInGroup ? 'top' : 'bottom'}
+					className={cn(
+						'h-6 w-6 flex items-center justify-center rounded-md',
+						'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-border',
+					)}
+					onOpenChange={setMenuOpen}
+				/>
+			</motion.div>
+		</div>
 	);
 };
