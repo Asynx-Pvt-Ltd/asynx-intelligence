@@ -1,6 +1,13 @@
 'use client';
 
-import { FormEvent, KeyboardEvent, useMemo, useRef, useState, useEffect } from 'react';
+import {
+	FormEvent,
+	KeyboardEvent,
+	useMemo,
+	useRef,
+	useState,
+	useEffect,
+} from 'react';
 import { ArrowUp, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/src/lib/utils';
@@ -132,6 +139,12 @@ export default function ChatInput({
 
 	const isSending = isSubmitting || sendState === 'sending';
 
+	useEffect(() => {
+		if (defaultValue) {
+			setPrompt(defaultValue);
+		}
+	}, [defaultValue]);
+
 	return (
 		<form onSubmit={handleSubmit} className={cn('w-full', className)}>
 			<div
@@ -235,10 +248,7 @@ export default function ChatInput({
 											'bg-primary text-white',
 											'shadow-glow-sm hover:shadow-glow',
 										]
-									: [
-											'bg-muted text-muted-foreground/40',
-											'cursor-not-allowed',
-										],
+									: ['bg-muted text-muted-foreground/40', 'cursor-not-allowed'],
 							)}
 						>
 							<AnimatePresence mode="wait" initial={false}>

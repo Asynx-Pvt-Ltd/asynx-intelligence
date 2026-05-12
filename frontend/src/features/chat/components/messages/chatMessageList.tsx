@@ -174,7 +174,9 @@ export default function ChatMessageList({
 
 								{/* Timestamp (hover only) */}
 								<MessageTimestamp
-									createdAt={(message as unknown as { created_at?: string }).created_at}
+									createdAt={
+										(message as unknown as { created_at?: string }).created_at
+									}
 								/>
 							</div>
 
@@ -203,7 +205,7 @@ function StructuredContent({
 	return (
 		<div className="space-y-4 text-[15px]">
 			{structured.title && (
-				<h2 className="text-base sm:text-lg font-semibold text-foreground">
+				<h2 className="text-base sm:text-xl text-foreground">
 					{structured.title}
 				</h2>
 			)}
@@ -216,9 +218,7 @@ function StructuredContent({
 				?.filter((s) => s.heading.toLowerCase() !== 'overview')
 				.map((section) => (
 					<section key={section.heading} className="space-y-1.5">
-						<h3 className="text-sm font-semibold text-foreground">
-							{section.heading}
-						</h3>
+						<h3 className="text-[16px] text-foreground">{section.heading}</h3>
 						<p className="text-muted-foreground leading-relaxed whitespace-pre-line">
 							{section.body}
 						</p>
