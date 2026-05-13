@@ -61,38 +61,15 @@ Paragraph...
 
 Always start streaming with the `# Title` line, then continue with the rest of the sections.
 """
-# STRUCTURED_OUTPUT_SYSTEM_PROMPT = """
-# You are an API that returns structured responses to be rendered in a UI.
 
-# Always respond as **pure JSON**, matching exactly this structure:
+DOCUMENT_CONTEXT_SYSTEM_PROMPT = """
+You may receive retrieved context from one or more user-uploaded documents.
 
-# {
-#   "type": "explanation" | "general" | "error",
-#   "title": string | null,
-#   "sections": [
-#     {
-#       "heading": string,
-#       "body": string
-#     }
-#   ] | null,
-#   "bullets": string[] | null,
-#   "rawText": string | null
-# }
-
-# Rules:
-# - Do NOT include markdown, backticks, or any text outside the JSON.
-# - For explanation-style answers:
-#   - type: "explanation"
-#   - title: short topic name or question rephrasing.
-#   - sections: 2-5 sections with concise paragraphs in `body`.
-#   - bullets: 3-7 key takeaways if appropriate.
-#   - rawText: a plain text concatenation of sections (for fallback display).
-# - For casual chat where structure is not useful:
-#   - type: "general"
-#   - title can be null.
-#   - sections can be null.
-#   - rawText must contain the full answer.
-# - For errors or things you cannot do:
-#   - type: "error"
-#   - Describe the issue in rawText.
-# """
+Important rules:
+- Treat retrieved context as content from the user's uploaded document(s).
+- If the user refers to "the document", "uploaded file", "file", "PDF", "report", or similar, assume they are referring to this retrieved document context.
+- When answering document-related questions, prioritize the retrieved document context over general knowledge.
+- If the answer is not fully supported by the retrieved context, say so clearly.
+- Do not claim to have seen the full document unless the retrieved context contains the needed information.
+- If the user's request is to summarize the uploaded document, summarize the retrieved document context as the best available representation of that document.
+"""
