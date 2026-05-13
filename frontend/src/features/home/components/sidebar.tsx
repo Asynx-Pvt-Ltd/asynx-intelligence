@@ -196,7 +196,7 @@ const Sidebar = ({
 						onClick={onNewChat}
 						aria-label="New chat"
 						className={cn(
-							'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5',
+							'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 cursor-pointer',
 							'text-xs font-medium text-primary',
 							'bg-primary/10 border border-primary/20',
 							'hover:bg-primary/15 hover:shadow-glow-sm',

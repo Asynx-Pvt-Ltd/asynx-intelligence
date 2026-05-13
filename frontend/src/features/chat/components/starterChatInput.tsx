@@ -212,7 +212,7 @@ const StarterChatInput = () => {
 							onClick={() => setDefaultPrompt(item.prompt)}
 							disabled={isSubmitting}
 							className={cn(
-								'group flex items-center gap-2 rounded-xl px-3.5 py-2.5',
+								'group flex items-center gap-2 rounded-xl px-3.5 py-2.5 cursor-pointer',
 								'border border-border bg-card/50 backdrop-blur-sm',
 								'text-sm text-muted-foreground',
 								'hover:border-primary/30 hover:bg-primary/5 hover:text-foreground',
