@@ -1,20 +1,30 @@
 'use client';
 
-import { Button } from '@/src/components/ui/button';
 import Logo from '@/src/components/ui/logo';
 import { ThemeToggle } from '@/src/components/ui/themeToggle';
 import { cn } from '@/src/lib/utils';
 import { useChatSidebarStore } from '@/src/stores/chat/chatSidebarStore';
 import { useChatStore } from '@/src/stores/chat/chatStore';
 import { OrganizationSwitcher, UserButton } from '@clerk/nextjs';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquarePlus, PanelLeft, Search, Settings, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+	MessageSquarePlus,
+	PanelLeft,
+	Search,
+	Settings,
+	X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import ConversationActionsMenu from '../../chat/components/conversationActionsMenu';
 import { getConversations } from '../../chat/lib/chatHistory';
 import { Conversation } from '../../chat/types/chatHistory';
+import { Button } from '@/src/components/ui/button';
+
+const SIDEBAR_ICON_SIZE = 'h-4.5! w-4.5!';
+const SIDEBAR_ACTION_ICON_SIZE = 'h-3.5! w-3.5!';
+const SIDEBAR_INPUT_ICON_SIZE = 'h-3! w-3!';
 
 interface SidebarProps {
 	className?: string;
@@ -23,7 +33,6 @@ interface SidebarProps {
 	onOpenSettings?: () => void;
 }
 
-/* ── Date grouping helpers ───────────────────────────────────── */
 type Group = { label: string; chats: Conversation[] };
 
 function groupByDate(chats: Conversation[]): Group[] {
@@ -54,8 +63,12 @@ function groupByDate(chats: Conversation[]): Group[] {
 	return groups.filter((g) => g.chats.length > 0);
 }
 
-/* ── Main sidebar ────────────────────────────────────────────── */
-const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: SidebarProps) => {
+const Sidebar = ({
+	className = '',
+	style = {},
+	onNewChat,
+	onOpenSettings,
+}: SidebarProps) => {
 	const pathname = usePathname();
 	const [chats, setChats] = useState<Conversation[]>([]);
 	const [search, setSearch] = useState('');
@@ -77,10 +90,8 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 		void fetchConversations();
 	}, [conversationsDirty]);
 
-	const filteredChats = chats.filter(
-		(c) =>
-			!c.is_draft &&
-			c.title?.toLowerCase().includes(search.toLowerCase()),
+	const filteredChats = chats.filter((c) =>
+		c.title?.toLowerCase().includes(search.toLowerCase()),
 	);
 
 	const groups = groupByDate(filteredChats);
@@ -90,63 +101,60 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 			className={cn(
 				'flex h-screen shrink-0 flex-row bg-sidebar',
 				'transition-[width] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]',
-				isOpen ? 'w-[280px]' : 'w-16',
+				isOpen ? 'w-70' : 'w-16',
 				className,
 			)}
 			style={style}
 		>
-			{/* ── Icon rail ──────────────────────────────────────── */}
 			<div className="flex w-16 flex-col items-center justify-between bg-sidebar px-2 py-3 border-r border-sidebar-border shrink-0">
 				<div className="flex flex-col items-center gap-3">
-					{/* Logo */}
 					<div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary shadow-glow-sm overflow-hidden">
 						<Logo imageStyles="w-5 h-5 object-contain" />
 					</div>
 
-					{/* Toggle */}
 					<button
 						onClick={toggle}
 						aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
 						aria-expanded={isOpen}
 						className={cn(
-							'flex h-8 w-8 items-center justify-center rounded-lg',
+							'flex h-8 w-8 items-center justify-center rounded-lg cursor-pointer',
 							'text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent',
 							'transition-colors duration-150',
 						)}
 					>
-						<PanelLeft className="h-4 w-4" />
+						<PanelLeft className={SIDEBAR_ICON_SIZE} />
 					</button>
 
-					{/* New chat */}
 					<button
 						onClick={onNewChat}
 						aria-label="New chat"
 						className={cn(
-							'flex h-8 w-8 items-center justify-center rounded-lg',
+							'flex h-8 w-8 items-center justify-center rounded-lg cursor-pointer',
 							'text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent',
 							'transition-colors duration-150',
 						)}
 					>
-						<MessageSquarePlus className="h-4 w-4" />
+						<MessageSquarePlus className={SIDEBAR_ICON_SIZE} />
 					</button>
 				</div>
 
-				{/* Bottom account */}
 				<div className="flex flex-col items-center gap-3 pb-1">
 					{onOpenSettings && (
-						<button
+						<Button
 							onClick={onOpenSettings}
 							aria-label="Open settings"
 							className={cn(
-								'flex h-8 w-8 items-center justify-center rounded-lg',
+								'bg-transparent flex h-10 w-10 items-center justify-center rounded-lg',
 								'text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent',
 								'transition-colors duration-150',
 							)}
 						>
-							<Settings className="h-4 w-4" />
-						</button>
+							<Settings className={SIDEBAR_ICON_SIZE} />
+						</Button>
 					)}
-					<ThemeToggle />
+
+					<ThemeToggle className="text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
+
 					<OrganizationSwitcher
 						afterSelectOrganizationUrl="/"
 						appearance={{
@@ -155,11 +163,12 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 								organizationSwitcherTrigger:
 									'w-8 h-8 rounded-full border border-sidebar-border bg-sidebar-accent flex items-center justify-center',
 								organizationPreview: 'hidden',
-								organizationAvatarBox: 'w-5 h-5',
-								organizationSwitcherTriggerIcon: 'w-3 h-3',
+								organizationAvatarBox: SIDEBAR_ICON_SIZE,
+								organizationSwitcherTriggerIcon: SIDEBAR_ICON_SIZE,
 							},
 						}}
 					/>
+
 					<UserButton
 						appearance={{
 							elements: {
@@ -170,7 +179,6 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 				</div>
 			</div>
 
-			{/* ── Expanded panel ─────────────────────────────────── */}
 			<div
 				className={cn(
 					'flex flex-1 flex-col min-w-0 overflow-hidden',
@@ -178,11 +186,11 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 					!isOpen && 'pointer-events-none opacity-0',
 				)}
 			>
-				{/* Header row */}
 				<div className="flex items-center justify-between px-3 pt-4 pb-2 shrink-0">
 					<span className="text-xs font-semibold tracking-widest uppercase text-sidebar-foreground/40 pl-1">
 						Chats
 					</span>
+
 					<button
 						onClick={onNewChat}
 						aria-label="New chat"
@@ -194,14 +202,19 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 							'transition-all duration-150',
 						)}
 					>
-						<MessageSquarePlus className="h-3.5 w-3.5" />
+						<MessageSquarePlus className={SIDEBAR_ACTION_ICON_SIZE} />
 						<span>New chat</span>
 					</button>
 				</div>
 
-				{/* Search */}
 				<div className="relative px-3 pb-3 shrink-0">
-					<Search className="absolute left-6 top-1/2 -translate-y-1/2 h-3 w-3 text-sidebar-foreground/40 pointer-events-none" />
+					<Search
+						className={cn(
+							'absolute left-6 top-4 -translate-y-1/2 text-sidebar-foreground/40 pointer-events-none',
+							SIDEBAR_INPUT_ICON_SIZE,
+						)}
+					/>
+
 					<input
 						type="search"
 						placeholder="Search chats…"
@@ -216,18 +229,8 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 							'transition-colors duration-150',
 						)}
 					/>
-					{search && (
-						<button
-							onClick={() => setSearch('')}
-							className="absolute right-6 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-sidebar-foreground"
-							aria-label="Clear search"
-						>
-							<X className="h-3 w-3" />
-						</button>
-					)}
 				</div>
 
-				{/* Conversation list */}
 				<div className="flex-1 overflow-y-auto px-2 pb-2 scrollbar-thin">
 					{groups.length === 0 ? (
 						<p className="px-3 py-4 text-xs text-sidebar-foreground/35 text-center">
@@ -245,6 +248,7 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 									<div className="mb-1 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/30">
 										{group.label}
 									</div>
+
 									<div className="space-y-0.5">
 										{group.chats.map((chat, i) => {
 											const isActive = pathname === `/chat/${chat.id}`;
@@ -258,7 +262,10 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 														hidden: { opacity: 0, x: -6 },
 														visible: { opacity: 1, x: 0 },
 													}}
-													transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+													transition={{
+														duration: 0.2,
+														ease: [0.25, 0.46, 0.45, 0.94],
+													}}
 												>
 													<Link
 														href={`/chat/${chat.id}`}
@@ -268,10 +275,10 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 														}
 														title={chat.title || 'Untitled Chat'}
 														className={cn(
-															'group flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-xs',
+															'group flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs min-w-0',
 															'transition-colors duration-150',
 															isActive
-																? 'bg-sidebar-accent text-sidebar-foreground font-medium'
+																? 'bg-sidebar-accent text-sidebar-foreground'
 																: 'text-sidebar-foreground/60 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground',
 														)}
 													>
@@ -303,7 +310,6 @@ const Sidebar = ({ className = '', style = {}, onNewChat, onOpenSettings }: Side
 
 export default Sidebar;
 
-/* ── Row action menu ─────────────────────────────────────────── */
 const RowMenuWrapper = ({
 	chatId,
 	chatTitle,
@@ -321,31 +327,34 @@ const RowMenuWrapper = ({
 	const shouldShow = isActive || isHovered || menuOpen;
 
 	return (
-		<AnimatePresence>
-			{shouldShow && (
-				<motion.div
-					initial={{ opacity: 0, x: 4 }}
-					animate={{ opacity: 1, x: 0 }}
-					exit={{ opacity: 0, x: 4 }}
-					transition={{ duration: 0.12 }}
-					onClick={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-					}}
-					className="shrink-0"
-				>
-					<ConversationActionsMenu
-						conversationId={chatId}
-						currentTitle={chatTitle}
-						placement={isLastInGroup ? 'top' : 'bottom'}
-						className={cn(
-							'h-6 w-6 flex items-center justify-center rounded-md',
-							'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-border',
-						)}
-						onOpenChange={setMenuOpen}
-					/>
-				</motion.div>
-			)}
-		</AnimatePresence>
+		<div
+			className="shrink-0 w-6 h-6 flex items-center justify-center"
+			onClick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+			}}
+		>
+			<motion.div
+				initial={false}
+				animate={{
+					opacity: shouldShow ? 1 : 0,
+					x: shouldShow ? 0 : 4,
+					pointerEvents: shouldShow ? 'auto' : 'none',
+				}}
+				transition={{ duration: 0.12 }}
+				className="w-6 h-6"
+			>
+				<ConversationActionsMenu
+					conversationId={chatId}
+					currentTitle={chatTitle}
+					placement={isLastInGroup ? 'top' : 'bottom'}
+					className={cn(
+						'h-6 w-6 flex items-center justify-center rounded-md',
+						'text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-border',
+					)}
+					onOpenChange={setMenuOpen}
+				/>
+			</motion.div>
+		</div>
 	);
 };

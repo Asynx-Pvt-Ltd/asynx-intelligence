@@ -47,11 +47,7 @@ export default async function RootLayout({
 				suppressHydrationWarning
 			>
 				<body className="font-sans antialiased">
-					<ThemeProvider
-						attribute="class"
-						defaultTheme="dark"
-						enableSystem
-					>
+					<ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
 						{children}
 					</ThemeProvider>
 				</body>
