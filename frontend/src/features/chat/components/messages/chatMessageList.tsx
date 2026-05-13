@@ -205,25 +205,44 @@ function StructuredContent({
 	return (
 		<div className="space-y-4 text-[15px]">
 			{structured.title && (
-				<h2 className="text-base sm:text-xl text-foreground">
+				<h2 className="text-base sm:text-xl font-semibold text-foreground">
 					{structured.title}
 				</h2>
 			)}
 			{structured.overview && (
-				<p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+				<p className="dark:text-white/70 leading-relaxed whitespace-pre-line">
 					{structured.overview}
 				</p>
 			)}
 			{structured.sections
 				?.filter((s) => s.heading.toLowerCase() !== 'overview')
-				.map((section) => (
-					<section key={section.heading} className="space-y-1.5">
-						<h3 className="text-[16px] text-foreground">{section.heading}</h3>
-						<p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-							{section.body}
-						</p>
-					</section>
-				))}
+				.map((section) => {
+					const { paragraph, bullets } = splitBodyIntoParagraphAndBullets(
+						section.body,
+					);
+					return (
+						<section key={section.heading} className="space-y-1.5">
+							<h3 className="text-[16px] font-semibold text-foreground">
+								{section.heading}
+							</h3>
+							{paragraph && (
+								<p className="dark:text-white/70 leading-relaxed whitespace-pre-line">
+									{paragraph}
+								</p>
+							)}
+
+							{bullets.length > 0 && (
+								<ul className="space-y-1 pl-5 list-disc marker:text-primary/50">
+									{bullets.map((b, i) => (
+										<li key={i} className="dark:text-white/70 leading-relaxed">
+											{b}
+										</li>
+									))}
+								</ul>
+							)}
+						</section>
+					);
+				})}
 			{structured.bullets && structured.bullets.length > 0 && (
 				<ul className="space-y-1 pl-5 list-disc marker:text-primary/50">
 					{structured.bullets.map((b, i) => (
@@ -259,4 +278,23 @@ function MessageTimestamp({ createdAt }: { createdAt?: string }) {
 			{formatted}
 		</span>
 	);
+}
+
+function splitBodyIntoParagraphAndBullets(body: string) {
+	const lines = body.split('\n').map((l) => l.trim());
+	const bulletLines: string[] = [];
+	const normalLines: string[] = [];
+
+	for (const line of lines) {
+		if (line.startsWith('- ')) {
+			bulletLines.push(line.slice(2)); // remove "- "
+		} else if (line) {
+			normalLines.push(line);
+		}
+	}
+
+	return {
+		paragraph: normalLines.join(' '), // or join with "\n\n" if you want breaks
+		bullets: bulletLines,
+	};
 }

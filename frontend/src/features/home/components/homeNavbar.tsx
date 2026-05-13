@@ -1,19 +1,14 @@
 'use client';
 
 import { cn } from '@/src/lib/utils';
-import { useChatSidebarStore } from '@/src/stores/chat/chatSidebarStore';
 import { motion } from 'framer-motion';
-import { PanelLeft, Sparkles } from 'lucide-react';
-import Logo from '@/src/components/ui/logo';
-import { ThemeToggle } from '@/src/components/ui/themeToggle';
+import { Sparkles } from 'lucide-react';
 
 interface HomeNavbarProps {
 	className?: string;
 }
 
 const HomeNavbar = ({ className }: HomeNavbarProps) => {
-	const { isOpen, toggle } = useChatSidebarStore();
-
 	return (
 		<motion.header
 			initial={{ opacity: 0, y: -4 }}
@@ -37,11 +32,6 @@ const HomeNavbar = ({ className }: HomeNavbarProps) => {
 						Intelligence
 					</span>
 				</div>
-			</div>
-
-			{/* Right: theme toggle */}
-			<div className="flex items-center gap-1">
-				<ThemeToggle />
 			</div>
 		</motion.header>
 	);
