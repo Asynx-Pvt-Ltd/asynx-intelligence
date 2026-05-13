@@ -108,9 +108,10 @@ const Sidebar = ({
 		>
 			<div className="flex w-16 flex-col items-center justify-between bg-sidebar px-2 py-3 border-r border-sidebar-border shrink-0">
 				<div className="flex flex-col items-center gap-3">
-					<div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary shadow-glow-sm overflow-hidden">
-						<Logo imageStyles="w-5 h-5 object-contain" />
-					</div>
+					<Logo
+						enableRedirect
+						imageStyles="w-7 h-7 object-contain cursor-pointer hover:brightness-125"
+					/>
 
 					<button
 						onClick={toggle}
