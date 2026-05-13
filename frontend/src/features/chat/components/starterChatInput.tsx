@@ -152,7 +152,7 @@ const StarterChatInput = () => {
 			>
 				<div className="relative">
 					<div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 shadow-glow">
-						<Logo imageStyles="w-11 h-11 object-contain" />
+						<Logo imageStyles="w-12 h-12 object-contain" />
 					</div>
 					<span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-glow-sm pulse-ring">
 						<Sparkles className="h-3 w-3 text-white" />

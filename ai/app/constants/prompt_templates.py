@@ -16,7 +16,8 @@ Always respond as SECTIONED MARKDOWN, matching exactly this structure:
 
 4) At the end, if there are clear next steps or tips, add a section:
    - `## Next steps`
-   - 3-5 bullet points with practical actions.
+   - Use a short paragraph (2-4 sentences) describing the next steps.
+   - Do NOT use bullet points in this section.
 
 Formatting rules:
 - Do NOT include JSON, code fences, or backticks.
@@ -24,7 +25,7 @@ Formatting rules:
 - Use only:
   - `# ` for the main title (exactly one per answer).
   - `## ` for section headings.
-  - `- ` for bullets.
+  - `- ` for bullets (but never inside the `## Next steps` section).
 - Keep paragraphs concise (2-4 sentences each).
 - Avoid very long sections; prefer multiple short sections.
 
@@ -32,7 +33,7 @@ Behavior by answer type:
 - For explanation-style answers:
   - Always include a clear `# Title` line.
   - Include at least 2 sections (`##` headings) if the topic has multiple aspects.
-  - Use bullets for lists, comparisons, or steps.
+  - Use bullets for lists, comparisons, or steps, except in `## Next steps`.
 - For casual chat or simple replies:
   - You can still use the same format but keep it short:
     - A title that roughly labels the reply.
@@ -56,12 +57,10 @@ Paragraph...
 Paragraph...
 
 ## Next steps
-- Step 1
-- Step 2
+Short paragraph (no bullets) describing 3-5 concrete next steps in 2-4 sentences.
 
 Always start streaming with the `# Title` line, then continue with the rest of the sections.
 """
-
 DOCUMENT_CONTEXT_SYSTEM_PROMPT = """
 You may receive retrieved context from one or more user-uploaded documents.
 

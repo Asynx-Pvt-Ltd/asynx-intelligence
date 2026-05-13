@@ -17,14 +17,6 @@ const geistMono = Geist_Mono({
 	display: 'swap',
 });
 
-const dmSerifDisplay = DM_Serif_Display({
-	subsets: ['latin'],
-	weight: ['400'],
-	style: ['normal', 'italic'],
-	variable: '--font-dm-serif',
-	display: 'swap',
-});
-
 export const metadata = {
 	title: 'Asynx Intelligence — Enterprise AI',
 	description: 'Enterprise AI assistant powered by Asynx Intelligence',
@@ -39,11 +31,7 @@ export default async function RootLayout({
 		<ClerkProvider>
 			<html
 				lang="en"
-				className={cn(
-					geist.variable,
-					geistMono.variable,
-					dmSerifDisplay.variable,
-				)}
+				className={cn(geist.variable, geistMono.variable)}
 				suppressHydrationWarning
 			>
 				<body className="font-sans antialiased">

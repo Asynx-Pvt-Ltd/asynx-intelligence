@@ -1,10 +1,5 @@
-import AuthWrapper from '@/src/features/auth/components/authWrapper';
-import { SignUp } from '@clerk/nextjs';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-	return (
-		<AuthWrapper>
-			<SignUp path="/sign-up" />
-		</AuthWrapper>
-	);
+	return redirect('/sign-in');
 }

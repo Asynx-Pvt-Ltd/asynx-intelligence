@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Palette, Sliders, Keyboard, Sun, Moon, Monitor } from 'lucide-react';
+import {
+	X,
+	Palette,
+	Sliders,
+	Keyboard,
+	Sun,
+	Moon,
+	Monitor,
+} from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/src/lib/utils';
 
@@ -34,7 +42,7 @@ const KEYBOARD_SHORTCUTS = [
 
 /* ── Drawer ─────────────────────────────────────────────────── */
 export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
-	const [tab, setTab] = useState<Tab>('appearance');
+	const [tab, setTab] = useState<Tab>('shortcuts');
 	const { theme, setTheme } = useTheme();
 	const [accent, setAccent] = useState<AccentId>('emerald');
 	const [temperature, setTemperature] = useState(0.7);
@@ -71,12 +79,16 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 	}, [open, onClose]);
 
 	const tabs: { id: Tab; label: string; icon: typeof Palette }[] = [
-		{ id: 'appearance', label: 'Appearance', icon: Palette },
-		{ id: 'model', label: 'Model', icon: Sliders },
+		// { id: 'appearance', label: 'Appearance', icon: Palette },
+		// { id: 'model', label: 'Model', icon: Sliders },
 		{ id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
 	];
 
-	const themeOptions: { value: ThemeOption; icon: typeof Sun; label: string }[] = [
+	const themeOptions: {
+		value: ThemeOption;
+		icon: typeof Sun;
+		label: string;
+	}[] = [
 		{ value: 'light', icon: Sun, label: 'Light' },
 		{ value: 'dark', icon: Moon, label: 'Dark' },
 		{ value: 'system', icon: Monitor, label: 'System' },
@@ -131,7 +143,6 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 							</button>
 						</div>
 
-						{/* Tab bar */}
 						<div className="flex items-center gap-1 px-4 pt-3 pb-0 border-b border-border shrink-0">
 							{tabs.map(({ id, label, icon: Icon }) => (
 								<button
@@ -151,10 +162,8 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 							))}
 						</div>
 
-						{/* Content */}
 						<div className="flex-1 overflow-y-auto px-5 py-5 space-y-6 scrollbar-thin">
-							{/* ── Appearance tab ────────────────────────── */}
-							{tab === 'appearance' && (
+							{/* {tab === 'appearance' && (
 								<motion.div
 									key="appearance"
 									initial={{ opacity: 0, y: 6 }}
@@ -162,7 +171,6 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 									transition={{ duration: 0.2 }}
 									className="space-y-6"
 								>
-									{/* Theme */}
 									<section className="space-y-3">
 										<h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
 											Theme
@@ -187,7 +195,6 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 										</div>
 									</section>
 
-									{/* Accent color */}
 									<section className="space-y-3">
 										<h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
 											Accent Color
@@ -201,7 +208,8 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 													aria-label={`Set accent to ${preset.label}`}
 													className={cn(
 														'relative h-8 w-8 rounded-full transition-all duration-200',
-														accent === preset.id && 'ring-2 ring-offset-2 ring-offset-card scale-110',
+														accent === preset.id &&
+															'ring-2 ring-offset-2 ring-offset-card scale-110',
 													)}
 													style={{
 														backgroundColor: preset.color,
@@ -222,7 +230,6 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 								</motion.div>
 							)}
 
-							{/* ── Model tab ──────────────────────────────── */}
 							{tab === 'model' && (
 								<motion.div
 									key="model"
@@ -231,7 +238,6 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 									transition={{ duration: 0.2 }}
 									className="space-y-6"
 								>
-									{/* Temperature */}
 									<section className="space-y-3">
 										<div className="flex items-center justify-between">
 											<h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -270,7 +276,6 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 										</div>
 									</section>
 
-									{/* System prompt */}
 									<section className="space-y-3">
 										<h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
 											System Prompt
@@ -296,9 +301,8 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
 										</p>
 									</section>
 								</motion.div>
-							)}
+							)} */}
 
-							{/* ── Shortcuts tab ──────────────────────────── */}
 							{tab === 'shortcuts' && (
 								<motion.div
 									key="shortcuts"
