@@ -1,20 +1,25 @@
 import { cn } from '@/src/lib/utils';
 import { ClerkProvider } from '@clerk/nextjs';
-import { Noto_Sans, Playfair_Display } from 'next/font/google';
+import { DM_Serif_Display, Geist, Geist_Mono } from 'next/font/google';
 import type React from 'react';
 import { ThemeProvider } from '../components/providers/themeProvider';
 import './globals.css';
 
-const playfairDisplayHeading = Playfair_Display({
+const geist = Geist({
 	subsets: ['latin'],
-	variable: '--font-heading',
+	variable: '--font-geist',
+	display: 'swap',
 });
 
-const notoSans = Noto_Sans({ subsets: ['latin'], variable: '--font-sans' });
+const geistMono = Geist_Mono({
+	subsets: ['latin'],
+	variable: '--font-geist-mono',
+	display: 'swap',
+});
 
 export const metadata = {
-	title: 'Enterprice AI Chatbot',
-	description: 'AI Chatbot for pdf analysis',
+	title: 'Asynx Intelligence — Enterprise AI',
+	description: 'Enterprise AI assistant powered by Asynx Intelligence',
 };
 
 export default async function RootLayout({
@@ -26,20 +31,11 @@ export default async function RootLayout({
 		<ClerkProvider>
 			<html
 				lang="en"
-				className={cn(
-					'font-sans',
-					notoSans.variable,
-					playfairDisplayHeading.variable,
-				)}
+				className={cn(geist.variable, geistMono.variable)}
 				suppressHydrationWarning
 			>
-				<body>
-					<ThemeProvider
-						attribute="class"
-						defaultTheme="system"
-						enableSystem
-						disableTransitionOnChange
-					>
+				<body className="font-sans antialiased">
+					<ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
 						{children}
 					</ThemeProvider>
 				</body>

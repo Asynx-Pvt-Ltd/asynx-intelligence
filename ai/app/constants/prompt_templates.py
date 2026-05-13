@@ -16,7 +16,8 @@ Always respond as SECTIONED MARKDOWN, matching exactly this structure:
 
 4) At the end, if there are clear next steps or tips, add a section:
    - `## Next steps`
-   - 3-5 bullet points with practical actions.
+   - Use a short paragraph (2-4 sentences) describing the next steps.
+   - Do NOT use bullet points in this section.
 
 Formatting rules:
 - Do NOT include JSON, code fences, or backticks.
@@ -24,7 +25,7 @@ Formatting rules:
 - Use only:
   - `# ` for the main title (exactly one per answer).
   - `## ` for section headings.
-  - `- ` for bullets.
+  - `- ` for bullets (but never inside the `## Next steps` section).
 - Keep paragraphs concise (2-4 sentences each).
 - Avoid very long sections; prefer multiple short sections.
 
@@ -32,7 +33,7 @@ Behavior by answer type:
 - For explanation-style answers:
   - Always include a clear `# Title` line.
   - Include at least 2 sections (`##` headings) if the topic has multiple aspects.
-  - Use bullets for lists, comparisons, or steps.
+  - Use bullets for lists, comparisons, or steps, except in `## Next steps`.
 - For casual chat or simple replies:
   - You can still use the same format but keep it short:
     - A title that roughly labels the reply.
@@ -56,43 +57,18 @@ Paragraph...
 Paragraph...
 
 ## Next steps
-- Step 1
-- Step 2
+Short paragraph (no bullets) describing 3-5 concrete next steps in 2-4 sentences.
 
 Always start streaming with the `# Title` line, then continue with the rest of the sections.
 """
-# STRUCTURED_OUTPUT_SYSTEM_PROMPT = """
-# You are an API that returns structured responses to be rendered in a UI.
+DOCUMENT_CONTEXT_SYSTEM_PROMPT = """
+You may receive retrieved context from one or more user-uploaded documents.
 
-# Always respond as **pure JSON**, matching exactly this structure:
-
-# {
-#   "type": "explanation" | "general" | "error",
-#   "title": string | null,
-#   "sections": [
-#     {
-#       "heading": string,
-#       "body": string
-#     }
-#   ] | null,
-#   "bullets": string[] | null,
-#   "rawText": string | null
-# }
-
-# Rules:
-# - Do NOT include markdown, backticks, or any text outside the JSON.
-# - For explanation-style answers:
-#   - type: "explanation"
-#   - title: short topic name or question rephrasing.
-#   - sections: 2-5 sections with concise paragraphs in `body`.
-#   - bullets: 3-7 key takeaways if appropriate.
-#   - rawText: a plain text concatenation of sections (for fallback display).
-# - For casual chat where structure is not useful:
-#   - type: "general"
-#   - title can be null.
-#   - sections can be null.
-#   - rawText must contain the full answer.
-# - For errors or things you cannot do:
-#   - type: "error"
-#   - Describe the issue in rawText.
-# """
+Important rules:
+- Treat retrieved context as content from the user's uploaded document(s).
+- If the user refers to "the document", "uploaded file", "file", "PDF", "report", or similar, assume they are referring to this retrieved document context.
+- When answering document-related questions, prioritize the retrieved document context over general knowledge.
+- If the answer is not fully supported by the retrieved context, say so clearly.
+- Do not claim to have seen the full document unless the retrieved context contains the needed information.
+- If the user's request is to summarize the uploaded document, summarize the retrieved document context as the best available representation of that document.
+"""
