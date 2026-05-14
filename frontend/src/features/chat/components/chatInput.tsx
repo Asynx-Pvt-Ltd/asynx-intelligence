@@ -18,6 +18,7 @@ import {
 } from '../../documents/components/documentUploader';
 import UploadFileList from '../../documents/components/uploadFileList';
 import { deleteRagDocuments } from '../../documents/lib/ragClient';
+import { Textarea } from '@/src/components/ui/textarea';
 
 type ChatSubmitPayload = {
 	prompt: string;
@@ -170,7 +171,7 @@ export default function ChatInput({
 
 				{/* Textarea */}
 				<div className="flex items-end gap-3 px-4 pt-3 pb-1">
-					<textarea
+					<Textarea
 						ref={textareaRef}
 						id="chat-prompt"
 						value={prompt}

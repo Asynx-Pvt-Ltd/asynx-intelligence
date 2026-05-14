@@ -176,11 +176,11 @@ export default function ChatNavbar({ chatId, className }: ChatNavbarProps) {
 
 			{/* Right: model selector + divider + share + actions */}
 			<div className="flex items-center gap-1 shrink-0">
-				<ModelSelector />
+				{/* <ModelSelector /> */}
 
-				<div className="h-4 w-px bg-border mx-1" aria-hidden />
+				{/* <div className="h-4 w-px bg-border mx-1" aria-hidden /> */}
 
-				<Button
+				{/* <Button
 					variant="ghost"
 					size="sm"
 					className="h-7 gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground"
@@ -188,7 +188,7 @@ export default function ChatNavbar({ chatId, className }: ChatNavbarProps) {
 				>
 					<Share2 className="h-3.5 w-3.5" />
 					<span className="hidden sm:inline">Share</span>
-				</Button>
+				</Button> */}
 
 				<ConversationActionsMenu
 					conversationId={chatId}
