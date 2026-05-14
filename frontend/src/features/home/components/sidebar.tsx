@@ -96,6 +96,12 @@ const Sidebar = ({
 
 	const groups = groupByDate(filteredChats);
 
+	const sidebarIconSlot = cn(
+		'flex h-10 w-10 items-center justify-center rounded-lg',
+		'text-sidebar-foreground/50 transition-colors duration-150',
+		'hover:bg-sidebar-accent hover:text-sidebar-foreground',
+	);
+
 	return (
 		<aside
 			className={cn(
@@ -139,44 +145,58 @@ const Sidebar = ({
 					</button>
 				</div>
 
-				<div className="flex flex-col items-center gap-3 pb-1">
+				<div className="flex flex-col items-center gap-2 pb-1">
 					{onOpenSettings && (
-						<Button
-							onClick={onOpenSettings}
-							aria-label="Open settings"
-							className={cn(
-								'bg-transparent flex h-10 w-10 items-center justify-center rounded-lg',
-								'text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent',
-								'transition-colors duration-150',
-							)}
-						>
-							<Settings className={SIDEBAR_ICON_SIZE} />
-						</Button>
+						<div className={sidebarIconSlot}>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								onClick={onOpenSettings}
+								aria-label="Open settings"
+								className={cn(
+									'h-10 w-10 rounded-lg bg-transparent p-0 text-inherit shadow-none',
+									'hover:bg-transparent',
+								)}
+							>
+								<Settings className={SIDEBAR_ICON_SIZE} />
+							</Button>
+						</div>
 					)}
 
-					<ThemeToggle className="text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
+					<div className={sidebarIconSlot}>
+						<ThemeToggle className="h-10 w-10 rounded-lg text-inherit hover:bg-transparent" />
+					</div>
 
-					<OrganizationSwitcher
-						afterSelectOrganizationUrl="/"
-						appearance={{
-							elements: {
-								rootBox: 'w-8 h-8',
-								organizationSwitcherTrigger:
-									'w-8 h-8 rounded-full border border-sidebar-border bg-sidebar-accent flex items-center justify-center',
-								organizationPreview: 'hidden',
-								organizationAvatarBox: SIDEBAR_ICON_SIZE,
-								organizationSwitcherTriggerIcon: SIDEBAR_ICON_SIZE,
-							},
-						}}
-					/>
+					<div className={sidebarIconSlot}>
+						<OrganizationSwitcher
+							afterSelectOrganizationUrl="/"
+							appearance={{
+								elements: {
+									rootBox: 'flex h-10 w-10 items-center justify-center',
+									organizationSwitcherTrigger:
+										'flex h-10 w-10 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent p-0',
+									organizationPreview: 'hidden',
+									organizationAvatarBox: 'h-5 w-5',
+									organizationSwitcherTriggerIcon:
+										'h-3.5 w-3.5 text-sidebar-foreground/60',
+								},
+							}}
+						/>
+					</div>
 
-					<UserButton
-						appearance={{
-							elements: {
-								avatarBox: 'w-8 h-8 rounded-full',
-							},
-						}}
-					/>
+					<div className={sidebarIconSlot}>
+						<UserButton
+							appearance={{
+								elements: {
+									rootBox: 'flex h-10 w-10 items-center justify-center',
+									avatarBox: 'h-8 w-8 rounded-full',
+									userButtonTrigger:
+										'flex h-10 w-10 items-center justify-center rounded-lg',
+								},
+							}}
+						/>
+					</div>
 				</div>
 			</div>
 

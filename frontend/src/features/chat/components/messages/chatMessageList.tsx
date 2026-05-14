@@ -87,7 +87,7 @@ export default function ChatMessageList({
 			variants={containerVariants}
 			initial="hidden"
 			animate="visible"
-			className="flex flex-col gap-4"
+			className="mx-auto flex w-full max-w-3xl flex-col gap-4"
 		>
 			<AnimatePresence initial={false}>
 				{messages.map((message, index) => {
@@ -115,35 +115,34 @@ export default function ChatMessageList({
 								isUser ? 'justify-end' : 'justify-start',
 							)}
 						>
-							{/* Assistant avatar */}
-							{!isUser && (
-								<div className="mr-3 mt-1 shrink-0 self-start">
-									<AssisstantMessageBubble />
-								</div>
-							)}
-
-							{/* Bubble */}
+							{/* Bubble wrapper */}
 							<div
 								className={cn(
-									'relative max-w-[75%] rounded-2xl',
+									'relative w-fit max-w-full rounded-2xl',
+									// add some padding on the right/top so the avatar
+									// doesn’t overlap the text
+									'pt-6 pr-10',
 									isUser
 										? [
 												'rounded-tr-sm',
-												'bg-primary/15 border border-primary/20',
-												'px-4 py-3',
-												'text-foreground',
+												'border border-primary/20 bg-primary/15',
+												'px-4 pb-3 text-foreground',
 											]
 										: [
 												'rounded-tl-sm',
 												'glass',
-												'px-4 py-3',
-												'text-foreground/90',
+												'px-4 pb-3 text-foreground/90',
 											],
 								)}
 							>
+								{/* Avatar in top-right corner of this box */}
+								<div className="absolute -top-4 -left-3 h-6 w-6">
+									{isUser ? <UserMessageBubble /> : <AssisstantMessageBubble />}
+								</div>
+
 								{/* Content */}
 								{isUser ? (
-									<div className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap">
+									<div className="whitespace-pre-wrap text-sm leading-relaxed sm:text-[15px]">
 										{message.content}
 									</div>
 								) : isStreamingAssistant && !message.content ? (
@@ -172,20 +171,13 @@ export default function ChatMessageList({
 									onRemoveFile={removeUploadedFile}
 								/>
 
-								{/* Timestamp (hover only) */}
+								{/* Timestamp */}
 								<MessageTimestamp
 									createdAt={
 										(message as unknown as { created_at?: string }).created_at
 									}
 								/>
 							</div>
-
-							{/* User avatar */}
-							{isUser && (
-								<div className="ml-3 mt-1 shrink-0 self-start">
-									<UserMessageBubble />
-								</div>
-							)}
 						</motion.div>
 					);
 				})}
