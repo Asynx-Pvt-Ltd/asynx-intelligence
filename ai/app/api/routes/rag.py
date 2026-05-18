@@ -1,7 +1,7 @@
 import os
 import tempfile
 from typing import Literal, Optional
-from uuid import UUID,uuid4
+from uuid import UUID, uuid4
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Depends
 from sqlalchemy.orm import Session
 
@@ -10,8 +10,20 @@ from app.core.rag.dependencies import get_rag
 from app.core.rag.chunker import chunk_document
 from app.core.rag.parsers import create_parser
 from app.core.rag.parsers.base import DocumentParserError
+from app.core.rag.vector_index_utils import (
+    build_vector_index_name,
+    parse_conversation_id_from_vector_index,
+)
 from app.schemas.rag import RAGDeleteRequest, RAGDeleteResponse, RAGUploadResponse
 from app.core.chat_history import ChatHistoryService
+from app.core.exceptions import (
+    ERROR_MESSAGES,
+    DocumentParsingError,
+    DocumentUploadError,
+    UnauthorizedAccessError,
+    ConversationNotFoundError,
+    InvalidInputError,
+)
 from app.models.chat import ConversationMessage
 
 router = APIRouter(prefix="/rag", tags=["RAG"])
@@ -39,8 +51,15 @@ async def upload_document(
     ),
     db: Session = Depends(get_db),
 ):
+    """
+    Upload a PDF document and add it to a conversation's RAG vector store.
+    
+    The document is chunked and stored in a vector index named after the conversation.
+    Updates the conversation with RAG metadata.
+    """
+    # Validate PDF file
     if not file.filename or not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+        raise InvalidInputError(ERROR_MESSAGES["INVALID_PDF"]).to_http_exception()
 
     
     # Use existing conversation or create a new draft conversation
@@ -50,21 +69,15 @@ async def upload_document(
             conv_uuid = UUID(conversation_id)
             conversation = ChatHistoryService.get_conversation(db, conv_uuid)
             if not conversation:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Conversation {conversation_id} not found"
-                )
+                raise ConversationNotFoundError(conversation_id).to_http_exception()
             # Ensure the conversation belongs to the same user and org
             if conversation.user_id != user_id or conversation.org_id != org_id:
-                raise HTTPException(
-                    status_code=403,
-                    detail="Conversation does not belong to the authenticated user/org"
-                )
+                raise UnauthorizedAccessError("Conversation").to_http_exception()
         except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid conversation ID format")
+            raise InvalidInputError(ERROR_MESSAGES["INVALID_CONVERSATION_ID"]).to_http_exception()
 
-    # Generate vector index with conversation ID
-    new_vector_index = f"org_{org_id}_conv_{conversation.id}"
+    # Generate vector index name for this conversation
+    new_vector_index = build_vector_index_name(org_id, conversation.id)
     
     tmp_path: Optional[str] = None
     try:
@@ -84,9 +97,9 @@ async def upload_document(
         )
 
         if not chunks:
-            raise HTTPException(
-                status_code=400, detail="No content extracted from the PDF."
-            )
+            raise InvalidInputError(
+                ERROR_MESSAGES["EMPTY_DOCUMENT"]
+            ).to_http_exception()
 
         rag = get_rag()
         rag.init_db(collection_name=new_vector_index)
@@ -109,11 +122,11 @@ async def upload_document(
         )
 
     except DocumentParserError as e:
-        raise HTTPException(status_code=422, detail=f"Document parsing failed: {e}")
+        raise DocumentParsingError(str(e), original_error=e).to_http_exception()
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
+        raise DocumentUploadError(str(e), original_error=e).to_http_exception()
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
@@ -125,19 +138,20 @@ async def delete_documents(
     request: RAGDeleteRequest,
     db: Session = Depends(get_db)
 ):
+    """
+    Delete documents from a RAG vector store.
+    
+    If the vector index is conversation-based and the conversation is now empty,
+    may clean up the conversation.
+    """
     if not request.document_ids:
-        raise HTTPException(status_code=400, detail="document_ids cannot be empty.")
+        raise InvalidInputError(
+            ERROR_MESSAGES["EMPTY_DOCUMENT_IDS"]
+        ).to_http_exception()
 
     try:
-        # Parse conversation_id from vector_index (format: org_{orgId}_conv_{conversationId})
-        conversation_id = None
-        if request.vector_index.startswith("org_") and "_conv_" in request.vector_index:
-            try:
-                # Extract the part after "_conv_"
-                conv_part = request.vector_index.split("_conv_")[1]
-                conversation_id = UUID(conv_part)
-            except (ValueError, IndexError):
-                pass  # Not a conversation-based vector index
+        # Try to parse conversation ID from vector index
+        conversation_id = parse_conversation_id_from_vector_index(request.vector_index)
         
         # Delete documents from vector store
         rag = get_rag()
@@ -165,6 +179,10 @@ async def delete_documents(
             vector_index=request.vector_index,
             deleted_ids=request.document_ids,
         )
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Delete failed: {e}")
+        raise DocumentUploadError(
+            f"Delete failed: {str(e)}", original_error=e
+        ).to_http_exception()
 

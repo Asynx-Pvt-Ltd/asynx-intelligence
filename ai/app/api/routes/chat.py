@@ -8,10 +8,18 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.rag.dependencies import get_rag
 from app.schemas.chat import ChatRequest, ChatResponse
-from app.core.llm import LLMService, _extract_reasoning
+from app.core.llm import LLMService
 from app.core.chat_history import ChatHistoryService
-
-from app.constants.prompt_templates import STRUCTURED_OUTPUT_SYSTEM_PROMPT,DOCUMENT_CONTEXT_SYSTEM_PROMPT
+from app.core.message_utils import (
+    extract_last_user_message,
+    prepare_messages_for_llm,
+)
+from app.core.exceptions import (
+    ERROR_MESSAGES,
+    ConversationNotFoundError,
+    RAGRetrievalError,
+    LLMGenerationError,
+)
 
 # Chat history sub‑router
 from app.api.routes import chat_history
@@ -26,11 +34,31 @@ def _retrieve_context(
     k: int,
     db: Session
 ):
+    """
+    Retrieve RAG context for a query.
+    
+    If conversation_id is provided, loads the conversation to find its vector_index.
+    If vector_index is provided directly, uses it.
+    If neither, returns None (no RAG context).
+    
+    Args:
+        conversation_id: Optional conversation UUID to look up vector_index from
+        vector_index: Optional vector_index to use directly
+        query: Query text for similarity search
+        k: Number of documents to retrieve
+        db: Database session
+        
+    Returns:
+        List of Document objects, or None if no vector_index available
+        
+    Raises:
+        ConversationNotFoundError: If conversation_id provided but not found in DB
+    """
     # If conversation_id is provided, load conversation and use its vector_index
     if conversation_id:
         conversation = ChatHistoryService.get_conversation(db, conversation_id)
         if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
+            raise ConversationNotFoundError(str(conversation_id))
         vector_index = conversation.vector_index
     
     # If no vector_index (either from conversation or direct parameter), return None
@@ -47,12 +75,20 @@ async def stream_chat_response(
     request: ChatRequest,
     db: Session = Depends(get_db)
 ):
+    """
+    Stream a chat response from the LLM.
+    
+    Supports RAG context injection if conversation_id is provided.
+    Yields Server-Sent Events (SSE) with tokens and reasoning content.
+    """
     if not request.messages:
-        raise HTTPException(status_code=400, detail="Messages list cannot be empty.")
+        raise HTTPException(
+            status_code=400,
+            detail=ERROR_MESSAGES["EMPTY_MESSAGES"]
+        )
 
-    last_user_msg = next(
-        (m.content for m in reversed(request.messages) if m.role == "user"), ""
-    )
+    # Extract the last user message for RAG context retrieval
+    last_user_msg = extract_last_user_message(request.messages)
 
     try:
         rag_context = _retrieve_context(
@@ -62,30 +98,22 @@ async def stream_chat_response(
             k=request.k,
             db=db
         )
+    except ConversationNotFoundError as e:
+        raise e.to_http_exception()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"RAG retrieval failed: {e}")
 
-    messages_dicts = [m.model_dump() for m in request.messages]
-
-    structured_system = {
-       "role": "system",
-       "content": STRUCTURED_OUTPUT_SYSTEM_PROMPT.strip(),
-    }
-    
-    messages_with_structure = [structured_system]
-
-    if rag_context:
-        messages_with_structure.append({
-            "role":"system",
-            'content':DOCUMENT_CONTEXT_SYSTEM_PROMPT.strip()
-        })
-        
-    messages_with_structure.extend(messages_dicts)
+    # Prepare messages with system prompts
+    messages_for_llm = prepare_messages_for_llm(
+        messages=request.messages,
+        include_structured_output=True,
+        include_rag_context=bool(rag_context),
+    )
 
     async def event_generator():
         try:
             async for chunk in LLMService.stream(
-                messages=messages_with_structure,
+                messages=messages_for_llm,
                 model_name=request.model_name,
                 rag_context=rag_context,
                 **request.kwargs,
@@ -93,7 +121,7 @@ async def stream_chat_response(
                 if chunk.content:
                     yield f"data: {json.dumps({'token': chunk.content})}\n\n"
 
-                reasoning = _extract_reasoning(chunk)
+                reasoning = LLMService._extract_reasoning(chunk)
                 if reasoning:
                     yield f"data: {json.dumps({'reasoning': reasoning})}\n\n"
 
@@ -109,36 +137,44 @@ async def get_chat_response(
     request: ChatRequest,
     db: Session = Depends(get_db)
 ):
+    """
+    Get a non-streaming chat response from the LLM.
+    
+    Supports RAG context injection if conversation_id is provided.
+    Returns structured response with content, model name, usage, and reasoning.
+    """
     if not request.messages:
-        raise HTTPException(status_code=400, detail="Messages list cannot be empty.")
+        raise HTTPException(
+            status_code=400,
+            detail=ERROR_MESSAGES["EMPTY_MESSAGES"]
+        )
 
-    last_user_msg = next(
-        (m.content for m in reversed(request.messages) if m.role == "user"), ""
-    )
+    # Extract the last user message for RAG context retrieval
+    last_user_msg = extract_last_user_message(request.messages)
 
     try:
         rag_context = _retrieve_context(
             conversation_id=request.conversation_id,
-            vector_index=None,  # Will be loaded from conversation if conversation_id provided
+            vector_index=None,
             query=last_user_msg,
             k=request.k,
             db=db
         )
+    except ConversationNotFoundError as e:
+        raise e.to_http_exception()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"RAG retrieval failed: {e}")
 
-    messages_dicts = [m.model_dump() for m in request.messages]
-    
-    structured_system = {
-       "role": "system",
-       "content": STRUCTURED_OUTPUT_SYSTEM_PROMPT.strip(),
-    }
-    
-    messages_with_structure = [structured_system] + messages_dicts
+    # Prepare messages with system prompts
+    messages_for_llm = prepare_messages_for_llm(
+        messages=request.messages,
+        include_structured_output=True,
+        include_rag_context=bool(rag_context),
+    )
     
     try:
         ai_message = await LLMService.generate(
-            messages=messages_with_structure,
+            messages=messages_for_llm,
             model_name=request.model_name,
             rag_context=rag_context,
             **request.kwargs,
@@ -146,6 +182,7 @@ async def get_chat_response(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"LLM generation failed: {e}")
 
+    # Extract usage information if available
     usage = None
     if ai_message.usage_metadata:
         usage = {
@@ -158,7 +195,7 @@ async def get_chat_response(
         content=ai_message.content,
         model_name=request.model_name,
         usage=usage,
-        reasoning_content=_extract_reasoning(ai_message),
+        reasoning_content=LLMService._extract_reasoning(ai_message),
     )
 
 
