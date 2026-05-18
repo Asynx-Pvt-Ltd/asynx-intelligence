@@ -198,36 +198,43 @@ function StructuredContent({
 		<div className="space-y-4 text-[15px]">
 			{structured.title && (
 				<h2 className="text-base sm:text-xl font-semibold text-foreground">
-					{structured.title}
+					<LinkifiedText text={structured.title} />
 				</h2>
 			)}
+
 			{structured.overview && (
-				<p className="dark:text-white/70 leading-relaxed whitespace-pre-line">
-					{structured.overview}
+				<p className="leading-relaxed whitespace-pre-line wrap-break-word dark:text-white/70">
+					<LinkifiedText text={structured.overview} />
 				</p>
 			)}
+
 			{structured.sections
 				?.filter((s) => s.heading.toLowerCase() !== 'overview')
 				.map((section) => {
 					const { paragraph, bullets } = splitBodyIntoParagraphAndBullets(
 						section.body,
 					);
+
 					return (
 						<section key={section.heading} className="space-y-1.5">
-							<h3 className="text-[16px] font-semibold text-foreground">
-								{section.heading}
+							<h3 className="text-[16px] font-semibold text-foreground wrap-break-word">
+								<LinkifiedText text={section.heading} />
 							</h3>
+
 							{paragraph && (
-								<p className="dark:text-white/70 leading-relaxed whitespace-pre-line">
-									{paragraph}
+								<p className="leading-relaxed whitespace-pre-line wrap-break-word dark:text-white/70">
+									<LinkifiedText text={paragraph} />
 								</p>
 							)}
 
 							{bullets.length > 0 && (
 								<ul className="space-y-1 pl-5 list-disc marker:text-primary/50">
 									{bullets.map((b, i) => (
-										<li key={i} className="dark:text-white/70 leading-relaxed">
-											{b}
+										<li
+											key={i}
+											className="leading-relaxed wrap-break-word dark:text-white/70"
+										>
+											<LinkifiedText text={b} />
 										</li>
 									))}
 								</ul>
@@ -235,15 +242,20 @@ function StructuredContent({
 						</section>
 					);
 				})}
+
 			{structured.bullets && structured.bullets.length > 0 && (
 				<ul className="space-y-1 pl-5 list-disc marker:text-primary/50">
 					{structured.bullets.map((b, i) => (
-						<li key={i} className="text-muted-foreground leading-relaxed">
-							{b}
+						<li
+							key={i}
+							className="leading-relaxed wrap-break-word text-muted-foreground"
+						>
+							<LinkifiedText text={b} />
 						</li>
 					))}
 				</ul>
 			)}
+
 			{isStreaming && (
 				<span className="cursor-blink ml-0.5 inline-block" aria-hidden />
 			)}
@@ -289,4 +301,35 @@ function splitBodyIntoParagraphAndBullets(body: string) {
 		paragraph: normalLines.join(' '), // or join with "\n\n" if you want breaks
 		bullets: bulletLines,
 	};
+}
+
+function LinkifiedText({ text }: { text: string }) {
+	const urlRegex = /((?:https?:\/\/|www\.)[^\s<]+[^<.,:;"')\]\s])/gi;
+	const parts = text.split(urlRegex);
+
+	return (
+		<>
+			{parts.map((part, i) => {
+				if (urlRegex.test(part)) {
+					urlRegex.lastIndex = 0;
+					const href = part.startsWith('http') ? part : `https://${part}`;
+
+					return (
+						<a
+							key={i}
+							href={href}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="break-all font-medium text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary"
+						>
+							{part}
+						</a>
+					);
+				}
+
+				urlRegex.lastIndex = 0;
+				return <span key={i}>{part}</span>;
+			})}
+		</>
+	);
 }
