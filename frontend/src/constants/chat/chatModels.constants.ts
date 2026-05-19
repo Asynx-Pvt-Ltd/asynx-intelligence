@@ -9,14 +9,14 @@ export const CHAT_MODELS = [
 	{
 		provider: 'ANTHROPIC',
 		options: [
-			{ label: 'Claude Opus 4.5', value: 'claude-opus-4.5' },
+			// { label: 'Claude Opus 4.5', value: 'claude-opus-4.5' },
 			{ label: 'Claude Sonnet 4.5', value: 'claude-sonnet-4-5' },
 		],
 	},
-	{
-		provider: 'xAI',
-		options: [{ label: 'Grok 4 Fast', value: 'grok-4-fast-non-reasoning' }],
-	},
+	// {
+	// 	provider: 'xAI',
+	// 	options: [{ label: 'Grok 4 Fast', value: 'grok-4-fast-non-reasoning' }],
+	// },
 ] as const;
 
 export type ChatModelGroup = (typeof CHAT_MODELS)[number];
