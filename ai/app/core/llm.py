@@ -311,11 +311,11 @@ class LLMService:
                     "langchain-anthropic is not installed. "
                     "Install it with: pip install -U langchain-anthropic"
                 )
-
             return ChatAnthropic(
                 model=model_name,
                 streaming=streaming,
                 api_key=api_key,
+                base_url="https://asynx-intelligence-resource.services.ai.azure.com/anthropic/",
                 **kwargs,
             )
 
@@ -443,7 +443,6 @@ class LLMService:
             **kwargs,
         )
         lc_messages = LLMService._to_langchain_messages(messages, rag_context)
-
         async for chunk in llm.astream(lc_messages):
             yield chunk
 

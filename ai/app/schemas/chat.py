@@ -50,12 +50,14 @@ class ConversationUpdate(BaseModel):
     vector_index: Optional[str] = None
     document_ids: Optional[List[str]] = None
     is_draft: Optional[bool] = None
+    model_name: Optional[str] = None
 
 
 class Conversation(ConversationBase):
     id: UUID
     vector_index: Optional[str] = None
     is_draft: bool = True
+    model_name:Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

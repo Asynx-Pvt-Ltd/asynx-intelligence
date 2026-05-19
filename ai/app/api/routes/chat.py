@@ -9,7 +9,7 @@ from app.core.db import get_db
 from app.core.rag.dependencies import get_rag
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.core.llm import LLMService
-from app.core.chat_history import ChatHistoryService
+from app.core.chat_history import ChatHistoryService,ConversationUpdate
 from app.core.message_utils import (
     extract_last_user_message,
     prepare_messages_for_llm,
@@ -17,8 +17,6 @@ from app.core.message_utils import (
 from app.core.exceptions import (
     ERROR_MESSAGES,
     ConversationNotFoundError,
-    RAGRetrievalError,
-    LLMGenerationError,
 )
 
 # Chat history sub‑router
@@ -86,6 +84,13 @@ async def stream_chat_response(
             status_code=400,
             detail=ERROR_MESSAGES["EMPTY_MESSAGES"]
         )
+    
+    if request.conversation_id:
+        ChatHistoryService.update_conversation(
+            db=db,
+            conversation_id=request.conversation_id,
+            conversation_in=ConversationUpdate(model_name=request.model_name),
+        )
 
     # Extract the last user message for RAG context retrieval
     last_user_msg = extract_last_user_message(request.messages)
@@ -147,6 +152,13 @@ async def get_chat_response(
         raise HTTPException(
             status_code=400,
             detail=ERROR_MESSAGES["EMPTY_MESSAGES"]
+        )
+    
+    if request.conversation_id:
+        ChatHistoryService.update_conversation(
+            db=db,
+            conversation_id=request.conversation_id,
+            conversation_in=ConversationUpdate(model_name=request.model_name),
         )
 
     # Extract the last user message for RAG context retrieval

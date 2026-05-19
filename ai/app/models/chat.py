@@ -21,6 +21,7 @@ class Conversation(Base):
     org_id = Column(String(255), nullable=False, index=True)
     
     vector_index = Column(String(255), nullable=True, index=True)
+    model_name = Column(String(255), nullable=True, index=True)
     is_draft = Column(Boolean, default=True, nullable=False, index=True)
     
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
