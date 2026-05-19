@@ -36,7 +36,9 @@ interface ChatInputProps {
 	onSubmit: (payload: ChatSubmitPayload) => Promise<void> | void;
 	onFilesSelected: (files: File[]) => void;
 	selectedModel: ChatModel;
-	onModelChange: Dispatch<SetStateAction<ChatModel>>;
+	onModelChange:
+		| Dispatch<SetStateAction<ChatModel>>
+		| ((nextModel: ChatModel) => void);
 	placeholder?: string;
 	disabled?: boolean;
 	isSubmitting?: boolean;

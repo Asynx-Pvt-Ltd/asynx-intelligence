@@ -37,21 +37,21 @@ const MODEL_META: Record<ChatModelId, ModelMeta> = {
 		badgeVariant: 'power',
 		latency: '~1.8s',
 	},
-	'claude-opus-4.5': {
-		badge: 'Power',
-		badgeVariant: 'power',
-		latency: '~2.8s',
-	},
+	// 'claude-opus-4.5': {
+	// 	badge: 'Power',
+	// 	badgeVariant: 'power',
+	// 	latency: '~2.8s',
+	// },
 	'claude-sonnet-4-5': {
 		badge: 'Default',
 		badgeVariant: 'default',
 		latency: '~1.2s',
 	},
-	'grok-4-fast-non-reasoning': {
-		badge: 'Fast',
-		badgeVariant: 'fast',
-		latency: '~0.9s',
-	},
+	// 'grok-4-fast-non-reasoning': {
+	// 	badge: 'Fast',
+	// 	badgeVariant: 'fast',
+	// 	latency: '~0.9s',
+	// },
 };
 
 const BadgeIcon = ({ variant }: { variant: BadgeVariant }) => {
@@ -68,7 +68,9 @@ const badgeStyles: Record<BadgeVariant, string> = {
 
 interface ModelSelectorProps {
 	value: ChatModelId;
-	onChange: Dispatch<SetStateAction<ChatModel>>;
+	onChange:
+		| Dispatch<SetStateAction<ChatModel>>
+		| ((nextModel: ChatModel) => void);
 	className?: string;
 	disabled?: boolean;
 }

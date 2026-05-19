@@ -13,7 +13,9 @@ interface ConversationChatInputProps {
 	disabled?: boolean;
 	conversationId: string;
 	selectedModel: ChatModel;
-	onModelChange: Dispatch<SetStateAction<ChatModel>>;
+	onModelChange:
+		| Dispatch<SetStateAction<ChatModel>>
+		| ((nextModel: ChatModel) => void);
 }
 
 const ConversationChatInput = ({

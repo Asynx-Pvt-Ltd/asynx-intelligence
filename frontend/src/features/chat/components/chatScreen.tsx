@@ -20,6 +20,22 @@ import type { AttachedFile } from '@/src/features/documents/types/documentTypes'
 import ScrollToBottomButton from '@/src/components/chat/ScrollToBottomButton';
 import EmptyState from '@/src/components/chat/EmptyState';
 import type { ChatModel } from '../types/chatModels';
+import {
+	ReadonlyURLSearchParams,
+	usePathname,
+	useRouter,
+	useSearchParams,
+} from 'next/navigation';
+
+const MODEL_QUERY_KEY = 'model';
+
+const getModelFromParams = (
+	params: ReadonlyURLSearchParams,
+	fallback: ChatModel,
+): ChatModel => {
+	const value = params.get(MODEL_QUERY_KEY) as ChatModel;
+	return value ? value : fallback;
+};
 
 export default function ChatScreen({
 	chatId,
@@ -38,8 +54,12 @@ export default function ChatScreen({
 	const [streamingIndex, setStreamingIndex] = useState<number | null>(null);
 	const [vectorIndex, setVectorIndex] = useState<string | undefined>();
 	const [showScrollBtn, setShowScrollBtn] = useState(false);
-	const [selectedModel, setSelectedModel] = useState<ChatModel>(model);
-
+	const router = useRouter();
+	const pathname = usePathname();
+	const params = useSearchParams();
+	const [selectedModel, setSelectedModel] = useState<ChatModel>(() =>
+		getModelFromParams(params, model),
+	);
 	const initializedRef = useRef(false);
 	const streamRunIdRef = useRef(0);
 	const messagesRef = useRef<Message[]>([]);
@@ -164,6 +184,18 @@ export default function ChatScreen({
 		}
 	};
 
+	const handleModelChange = useCallback(
+		(nextModel: ChatModel) => {
+			setSelectedModel(nextModel);
+
+			const nextParams = new URLSearchParams(params.toString());
+			nextParams.set(MODEL_QUERY_KEY, nextModel);
+
+			router.replace(`${pathname}?${nextParams.toString()}`, { scroll: false });
+		},
+		[params, pathname, router],
+	);
+
 	useEffect(() => {
 		scrollToBottom();
 	}, [messages, scrollToBottom]);
@@ -191,8 +223,7 @@ export default function ChatScreen({
 		streamRunIdRef.current += 1;
 		setMessages([]);
 		setIsHydrating(true);
-		setSelectedModel(model);
-	}, [chatId, model]);
+	}, [chatId]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -230,7 +261,12 @@ export default function ChatScreen({
 			files,
 			model: selectedModel,
 		});
-	}, [pendingPrompt, isHydrating, clearPendingPrompt, files, selectedModel]);
+	}, [pendingPrompt, isHydrating, clearPendingPrompt, files]);
+
+	useEffect(() => {
+		const modelFromUrl = getModelFromParams(params, model);
+		setSelectedModel((prev) => (prev === modelFromUrl ? prev : modelFromUrl));
+	}, [params, model]);
 
 	if (isHydrating) {
 		return (
@@ -296,7 +332,7 @@ export default function ChatScreen({
 						disabled={isHydrating || isLoading}
 						conversationId={chatId}
 						selectedModel={selectedModel}
-						onModelChange={setSelectedModel}
+						onModelChange={handleModelChange}
 					/>
 				</div>
 			</div>
