@@ -18,7 +18,7 @@ interface ChatMessageListProps {
 	messages: Message[];
 	isLoading: boolean;
 	streamingIndex: number | null;
-	setMessage: Dispatch<SetStateAction<Message[]>>;
+	setMessages: Dispatch<SetStateAction<Message[]>>;
 	vectorIndex: string | undefined;
 	conversationId: string;
 }
@@ -38,7 +38,7 @@ export default function ChatMessageList({
 	messages,
 	isLoading,
 	streamingIndex,
-	setMessage,
+	setMessages,
 	vectorIndex,
 	conversationId,
 }: ChatMessageListProps) {
@@ -51,7 +51,7 @@ export default function ChatMessageList({
 		index: number;
 		messageId: string;
 	}) => {
-		setMessage((prev) =>
+		setMessages((prev) =>
 			prev.map((msg, idx) =>
 				idx === index
 					? {

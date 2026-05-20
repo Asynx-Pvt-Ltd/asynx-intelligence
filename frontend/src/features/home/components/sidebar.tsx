@@ -12,7 +12,7 @@ import { MessageSquarePlus, PanelLeft, Search, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import ConversationActionsMenu from '../../chat/components/conversationActionsMenu';
+import ConversationActionsMenu from '../../../components/chat/conversationActionsMenu';
 import { getConversations } from '../../chat/lib/chatHistory';
 import { Conversation } from '../../chat/types/chatHistory';
 

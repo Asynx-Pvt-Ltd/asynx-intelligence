@@ -17,11 +17,11 @@ import { useUploadStore } from '@/src/stores/document/uploadStore';
 import {
 	DocumentUploader,
 	type UploadingFile,
-} from '../../documents/components/documentUploader';
-import UploadFileList from '../../documents/components/uploadFileList';
-import { deleteRagDocuments } from '../../documents/lib/ragClient';
+} from '../../../documents/components/documentUploader';
+import UploadFileList from '../../../documents/components/uploadFileList';
+import { deleteRagDocuments } from '../../../documents/lib/ragClient';
 import { Textarea } from '@/src/components/ui/textarea';
-import type { ChatModel } from '../types/chatModels';
+import type { ChatModel } from '../../types/chatModels';
 import ModelSelector from '@/src/components/chat/ModelSelector';
 
 type ChatSubmitPayload = {

@@ -1,5 +1,5 @@
-import StarterChatInput from '../../chat/components/starterChatInput';
-import StarterChatWrapper from '../../chat/components/starterChatWrapper';
+import StarterChatInput from '../../chat/components/chatInputs/starterChatInput';
+import StarterChatWrapper from '../../chat/components/chatArea/starterChatWrapper';
 
 export function Home() {
 	return (

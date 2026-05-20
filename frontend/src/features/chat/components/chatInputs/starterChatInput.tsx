@@ -12,10 +12,10 @@ import { motion } from 'framer-motion';
 import { BarChart2, FileText, MessageSquare, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { uploadRagDocumentWithProgress } from '../../documents/lib/ragClient';
-import { ChatSubmitPayload } from '../types/chatTypes';
+import { uploadRagDocumentWithProgress } from '../../../documents/lib/ragClient';
+import { ChatSubmitPayload } from '../../types/chatTypes';
 import ChatInput from './chatInput';
-import { ChatModel } from '../types/chatModels';
+import { ChatModel } from '../../types/chatModels';
 
 const SUGGESTED_PROMPTS = [
 	{
