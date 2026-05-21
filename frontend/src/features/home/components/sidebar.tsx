@@ -1,26 +1,20 @@
 'use client';
 
+import { Button } from '@/src/components/ui/button';
 import Logo from '@/src/components/ui/logo';
 import { ThemeToggle } from '@/src/components/ui/themeToggle';
 import { cn } from '@/src/lib/utils';
 import { useChatSidebarStore } from '@/src/stores/chat/chatSidebarStore';
 import { useChatStore } from '@/src/stores/chat/chatStore';
 import { OrganizationSwitcher, UserButton } from '@clerk/nextjs';
-import { AnimatePresence, motion } from 'framer-motion';
-import {
-	MessageSquarePlus,
-	PanelLeft,
-	Search,
-	Settings,
-	X,
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { MessageSquarePlus, PanelLeft, Search, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import ConversationActionsMenu from '../../chat/components/conversationActionsMenu';
 import { getConversations } from '../../chat/lib/chatHistory';
 import { Conversation } from '../../chat/types/chatHistory';
-import { Button } from '@/src/components/ui/button';
 
 const SIDEBAR_ICON_SIZE = 'h-4.5! w-4.5!';
 const SIDEBAR_ACTION_ICON_SIZE = 'h-3.5! w-3.5!';
@@ -81,7 +75,7 @@ const Sidebar = ({
 	useEffect(() => {
 		const fetchConversations = async () => {
 			try {
-				const convs = await getConversations();
+				const convs: Conversation[] = await getConversations();
 				setChats(convs);
 			} catch {
 				/* ignore */
@@ -289,7 +283,7 @@ const Sidebar = ({
 													}}
 												>
 													<Link
-														href={`/chat/${chat.id}`}
+														href={`/chat/${chat.id}?model=${chat.model_name}`}
 														onMouseEnter={() => setHoveredId(chat.id)}
 														onMouseLeave={() =>
 															setHoveredId((p) => (p === chat.id ? null : p))

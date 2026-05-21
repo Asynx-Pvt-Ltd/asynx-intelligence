@@ -6,6 +6,7 @@ export interface Conversation {
 	created_at: string;
 	updated_at: string;
 	is_draft?: boolean;
+	model_name?: string;
 	vector_index?: string | null;
 	document_ids?: string[] | null;
 	messages?: HistoryMessage[];
