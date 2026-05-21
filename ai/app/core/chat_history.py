@@ -24,6 +24,15 @@ class ChatHistoryService:
     ) -> Conversation:
         """
         Create a new conversation.
+        
+        Args:
+            db: Database session
+            conversation_in: Conversation data (title, user_id, org_id)
+            
+        Returns:
+            Created Conversation object with generated ID and timestamps
+            
+        NOTE: Emits debug log with conversation ID for tracing
         """
         db_conversation = Conversation(
             title=conversation_in.title,
@@ -43,6 +52,13 @@ class ChatHistoryService:
     ) -> Optional[Conversation]:
         """
         Retrieve a conversation by ID.
+        
+        Args:
+            db: Database session
+            conversation_id: UUID of the conversation
+            
+        Returns:
+            Conversation object if found, None otherwise
         """
         return db.query(Conversation).filter(Conversation.id == conversation_id).first()
 
@@ -56,7 +72,17 @@ class ChatHistoryService:
     ) -> List[Conversation]:
         """
         List conversations, optionally filtered by user_id and org_id.
-        Ordered by updated_at descending (most recent first).
+        Results are ordered by updated_at descending (most recent first).
+        
+        Args:
+            db: Database session
+            user_id: Optional user ID to filter by
+            org_id: Optional org ID to filter by
+            skip: Number of records to skip for pagination
+            limit: Maximum number of records to return
+            
+        Returns:
+            List of Conversation objects matching the filters
         """
         query = db.query(Conversation)
         if user_id is not None:
@@ -72,7 +98,19 @@ class ChatHistoryService:
         conversation_in: ConversationUpdate,
     ) -> Optional[Conversation]:
         """
-        Update conversation fields (e.g., title). document_ids updates are ignored.
+        Update conversation fields (title, vector_index, is_draft, etc.).
+        Only updates fields that are explicitly set in the input.
+        
+        Args:
+            db: Database session
+            conversation_id: UUID of the conversation to update
+            conversation_in: Update data with fields to modify
+            
+        Returns:
+            Updated Conversation object if found, None otherwise
+            
+        NOTE: document_ids field in the update is accepted but not persisted
+        (for backward compatibility). They are stored per-message now.
         """
         db_conversation = ChatHistoryService.get_conversation(db, conversation_id)
         if not db_conversation:
@@ -92,8 +130,14 @@ class ChatHistoryService:
         conversation_id: UUID,
     ) -> bool:
         """
-        Delete a conversation and all its messages (cascade).
-        Returns True if a conversation was deleted, False if not found.
+        Delete a conversation and all its messages (cascade delete).
+        
+        Args:
+            db: Database session
+            conversation_id: UUID of the conversation to delete
+            
+        Returns:
+            True if a conversation was deleted, False if not found
         """
         db_conversation = ChatHistoryService.get_conversation(db, conversation_id)
         if not db_conversation:
@@ -109,6 +153,19 @@ class ChatHistoryService:
     ) -> ConversationMessage:
         """
         Add a message to an existing conversation.
+        
+        Args:
+            db: Database session
+            message_in: Message data including conversation_id, role, content, etc.
+            
+        Returns:
+            Created ConversationMessage object
+            
+        Raises:
+            ValueError: If conversation_id does not exist
+            
+        NOTE: Converts AttachedFile objects to JSON-serializable format,
+        converting UUIDs to strings to preserve database compatibility.
         """
         # Ensure conversation exists
         conversation = ChatHistoryService.get_conversation(db, message_in.conversation_id)
@@ -149,7 +206,17 @@ class ChatHistoryService:
         limit: int = 500,
     ) -> List[ConversationMessage]:
         """
-        Retrieve messages for a conversation, ordered by created_at ascending.
+        Retrieve messages for a conversation.
+        Messages are ordered by created_at ascending (oldest first) for conversation display.
+        
+        Args:
+            db: Database session
+            conversation_id: UUID of the conversation
+            skip: Number of records to skip for pagination
+            limit: Maximum number of records to return (default 500)
+            
+        Returns:
+            List of ConversationMessage objects in chronological order
         """
         return (
             db.query(ConversationMessage)
@@ -165,7 +232,18 @@ class ChatHistoryService:
         db: Session,
         message_id: UUID,
         attached_files: List[AttachedFile],
-    ) -> ConversationMessage | None:
+    ) -> Optional[ConversationMessage]:
+        """
+        Update attached files on an existing message.
+        
+        Args:
+            db: Database session
+            message_id: UUID of the message to update
+            attached_files: List of AttachedFile objects
+            
+        Returns:
+            Updated ConversationMessage object if message exists, None otherwise
+        """
         db_msg = db.query(ConversationMessage).filter_by(id=message_id).first()
         if not db_msg:
             return None
@@ -182,9 +260,20 @@ class ChatHistoryService:
         conversation_id: UUID,
     ) -> Optional[Conversation]:
         """
-        Retrieve a conversation with its messages eagerly loaded.
-        """
+        Retrieve a conversation with all its messages eagerly loaded.
         
+        Messages are ordered by creation time (ascending) and then by ID for consistency.
+        
+        Args:
+            db: Database session
+            conversation_id: UUID of the conversation to retrieve
+            
+        Returns:
+            Conversation object with messages list populated if found, None otherwise
+            
+        NOTE: This performs two queries (one for conversation, one for messages).
+        Useful for frontend display where full message history is needed.
+        """
         conversation = (
         db.query(Conversation)
         .filter(Conversation.id == conversation_id)
@@ -209,7 +298,18 @@ class ChatHistoryService:
         vector_index: str,
     ) -> Optional[Conversation]:
         """
-        Update RAG metadata (vector_index only). document_ids are no longer stored on conversation.
+        Update RAG metadata on a conversation (vector_index).
+        
+        Args:
+            db: Database session
+            conversation_id: UUID of the conversation to update
+            vector_index: Name of the vector store collection for this conversation
+            
+        Returns:
+            Updated Conversation object if found, None otherwise
+            
+        NOTE: Also resets document_ids to empty list for backward compatibility.
+        Document IDs are no longer stored at conversation level; they are per-message.
         """
         db_conversation = ChatHistoryService.get_conversation(db, conversation_id)
         if not db_conversation:
