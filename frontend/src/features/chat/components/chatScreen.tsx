@@ -19,8 +19,15 @@ import { useUploadStore } from '@/src/stores/document/uploadStore';
 import type { AttachedFile } from '@/src/features/documents/types/documentTypes';
 import ScrollToBottomButton from '@/src/components/chat/ScrollToBottomButton';
 import EmptyState from '@/src/components/chat/EmptyState';
+import type { ChatModel } from '../types/chatModels';
 
-export default function ChatScreen({ chatId }: { chatId: string }) {
+export default function ChatScreen({
+	chatId,
+	model,
+}: {
+	chatId: string;
+	model: ChatModel;
+}) {
 	const pendingPrompt = useChatStore((state) => state.pendingPrompt);
 	const clearPendingPrompt = useChatStore((state) => state.clearPendingPrompt);
 
@@ -31,6 +38,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 	const [streamingIndex, setStreamingIndex] = useState<number | null>(null);
 	const [vectorIndex, setVectorIndex] = useState<string | undefined>();
 	const [showScrollBtn, setShowScrollBtn] = useState(false);
+	const [selectedModel, setSelectedModel] = useState<ChatModel>(model);
 
 	const initializedRef = useRef(false);
 	const streamRunIdRef = useRef(0);
@@ -42,7 +50,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		bottomRef.current?.scrollIntoView({ behavior });
 	}, []);
 
-	const sendMessage = async ({ prompt, files }: ChatSubmitPayload) => {
+	const sendMessage = async ({ prompt, files, model }: ChatSubmitPayload) => {
 		const trimmed = prompt.trim();
 		if (!trimmed || isLoading) return;
 
@@ -72,6 +80,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 
 		const assistantMsg: Message = { id: '', role: 'assistant', content: '' };
 		const baseMessages = messagesRef.current;
+		const modelForThisRun = model;
 
 		setMessages((prev) => {
 			const next = [...prev, userMsg, assistantMsg];
@@ -90,7 +99,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 			const payload: ChatRequest = {
 				messages: [...baseMessages, userMsg],
 				conversation_id: chatId,
-				model_name: 'gpt-5-mini',
+				model_name: modelForThisRun,
 				k: 20,
 				kwargs: {},
 			};
@@ -106,6 +115,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 						if (lastIndex < 0) return prev;
 						const last = prev[lastIndex];
 						if (last.role !== 'assistant') return prev;
+
 						return [
 							...prev.slice(0, lastIndex),
 							{ ...last, content: last.content + chunk.token },
@@ -121,16 +131,18 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				role: 'assistant',
 				content: fullContent,
 				reasoning_content: fullReasoning,
-				model_name: 'gpt-5-mini',
+				model_name: modelForThisRun,
 				attached_files: [],
 			});
 		} catch {
 			if (streamRunIdRef.current !== currentRunId) return;
+
 			setMessages((prev) => {
 				const lastIndex = prev.length - 1;
 				if (lastIndex < 0) return prev;
 				const last = prev[lastIndex];
 				if (last.role !== 'assistant') return prev;
+
 				return [
 					...prev.slice(0, lastIndex),
 					{
@@ -139,6 +151,7 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 					},
 				];
 			});
+
 			setStreamingIndex(null);
 		} finally {
 			if (streamRunIdRef.current === currentRunId) {
@@ -151,7 +164,6 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		}
 	};
 
-	/* Scroll to bottom when new messages arrive */
 	useEffect(() => {
 		scrollToBottom();
 	}, [messages, scrollToBottom]);
@@ -160,7 +172,6 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		messagesRef.current = messages;
 	}, [messages]);
 
-	/* Show scroll-to-bottom FAB when scrolled up */
 	useEffect(() => {
 		const el = scrollContainerRef.current;
 		if (!el) return;
@@ -175,17 +186,17 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 		return () => el.removeEventListener('scroll', onScroll);
 	}, []);
 
-	/* Reset on chat change */
 	useEffect(() => {
 		initializedRef.current = false;
 		streamRunIdRef.current += 1;
 		setMessages([]);
 		setIsHydrating(true);
-	}, [chatId]);
+		setSelectedModel(model);
+	}, [chatId, model]);
 
-	/* Hydrate from history */
 	useEffect(() => {
 		let cancelled = false;
+
 		const hydrate = async () => {
 			try {
 				const convo = await getConversation(chatId);
@@ -199,30 +210,35 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				if (!cancelled) setIsHydrating(false);
 			}
 		};
+
 		void hydrate();
+
 		return () => {
 			cancelled = true;
 		};
 	}, [chatId]);
 
-	/* Send pending prompt */
 	useEffect(() => {
 		if (initializedRef.current) return;
 		if (!pendingPrompt || isHydrating) return;
 
 		initializedRef.current = true;
 		clearPendingPrompt();
-		void sendMessage({ prompt: pendingPrompt, files });
-	}, [pendingPrompt, isHydrating, clearPendingPrompt]);
 
-	/* Loading skeleton */
+		void sendMessage({
+			prompt: pendingPrompt,
+			files,
+			model: selectedModel,
+		});
+	}, [pendingPrompt, isHydrating, clearPendingPrompt, files, selectedModel]);
+
 	if (isHydrating) {
 		return (
-			<div className="flex flex-col gap-4 px-6 py-8 max-w-4xl mx-auto w-full">
+			<div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-6 py-8">
 				{[80, 60, 90, 50].map((w, i) => (
 					<div
 						key={i}
-						className={`h-12 rounded-2xl shimmer`}
+						className="h-12 rounded-2xl shimmer"
 						style={{
 							width: `${w}%`,
 							alignSelf: i % 2 === 0 ? 'flex-end' : 'flex-start',
@@ -235,7 +251,6 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 
 	return (
 		<div className="relative flex h-full flex-col">
-			{/* Message list */}
 			<div
 				ref={scrollContainerRef}
 				className="flex-1 overflow-y-auto scrollbar-thin"
@@ -243,7 +258,13 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				<div className="mx-auto w-full max-w-3xl px-4 py-6">
 					{messages.length === 0 ? (
 						<EmptyState
-							onSelectPrompt={(p) => void sendMessage({ prompt: p, files: [] })}
+							onSelectPrompt={(p) =>
+								void sendMessage({
+									prompt: p,
+									files: [],
+									model: selectedModel,
+								})
+							}
 						/>
 					) : (
 						<>
@@ -261,7 +282,6 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				</div>
 			</div>
 
-			{/* Scroll-to-bottom FAB */}
 			<div className="absolute bottom-24 right-6 z-20">
 				<ScrollToBottomButton
 					visible={showScrollBtn}
@@ -269,13 +289,14 @@ export default function ChatScreen({ chatId }: { chatId: string }) {
 				/>
 			</div>
 
-			{/* Floating input bar */}
-			<div className="sticky bottom-0 z-10 bg-gradient-to-t from-chat-screen via-chat-screen/90 to-transparent pb-4 pt-2 px-4">
+			<div className="sticky bottom-0 z-10 bg-gradient-to-t from-chat-screen via-chat-screen/90 to-transparent px-4 pb-4 pt-2">
 				<div className="mx-auto max-w-3xl">
 					<ConversationChatInput
 						onSendMessage={sendMessage}
 						disabled={isHydrating || isLoading}
 						conversationId={chatId}
+						selectedModel={selectedModel}
+						onModelChange={setSelectedModel}
 					/>
 				</div>
 			</div>

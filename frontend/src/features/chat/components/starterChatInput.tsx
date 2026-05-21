@@ -1,25 +1,21 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { useChatStore } from '@/src/stores/chat/chatStore';
+import Logo from '@/src/components/ui/logo';
 import {
 	createConversation,
 	updateConversation,
 } from '@/src/features/chat/lib/chatHistory';
-import ChatInput from './chatInput';
-import type { UploadingFile } from '../../documents/components/documentUploader';
-import { uploadRagDocumentWithProgress } from '../../documents/lib/ragClient';
-import { useUploadStore } from '@/src/stores/document/uploadStore';
-import Logo from '@/src/components/ui/logo';
-import { Sparkles, FileText, BarChart2, MessageSquare } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
-
-type ChatSubmitPayload = {
-	prompt: string;
-	files: UploadingFile[];
-};
+import { useChatStore } from '@/src/stores/chat/chatStore';
+import { useUploadStore } from '@/src/stores/document/uploadStore';
+import { motion } from 'framer-motion';
+import { BarChart2, FileText, MessageSquare, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { uploadRagDocumentWithProgress } from '../../documents/lib/ragClient';
+import { ChatSubmitPayload } from '../types/chatTypes';
+import ChatInput from './chatInput';
+import { ChatModel } from '../types/chatModels';
 
 const SUGGESTED_PROMPTS = [
 	{
@@ -43,7 +39,7 @@ const StarterChatInput = () => {
 	const router = useRouter();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [defaultPrompt, setDefaultPrompt] = useState('');
-
+	const [selectedModel, setSelectedModel] = useState<ChatModel>('gpt-5-mini');
 	const addFile = useUploadStore((s) => s.addFile);
 	const updateFile = useUploadStore((s) => s.updateFile);
 	const setPendingPrompt = useChatStore((state) => state.setPendingPrompt);
@@ -133,7 +129,7 @@ const StarterChatInput = () => {
 
 			bumpConversationsDirty();
 			setPendingPrompt(prompt);
-			router.push(`/chat/${conversationId}`);
+			router.push(`/chat/${conversationId}?model=${selectedModel}`);
 		} catch {
 			/* no-op */
 		} finally {
@@ -184,6 +180,8 @@ const StarterChatInput = () => {
 				<ChatInput
 					onSubmit={handleCreateConversation}
 					onFilesSelected={handleFilesSelected}
+					selectedModel={selectedModel}
+					onModelChange={setSelectedModel}
 					isSubmitting={isSubmitting}
 					placeholder="Ask anything…"
 					defaultValue={defaultPrompt}
