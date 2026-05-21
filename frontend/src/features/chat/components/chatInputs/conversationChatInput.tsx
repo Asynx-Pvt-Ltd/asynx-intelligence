@@ -2,18 +2,20 @@
 
 import { Dispatch, SetStateAction, useState } from 'react';
 import ChatInput from './chatInput';
-import type { UploadingFile } from '../../documents/components/documentUploader';
-import { uploadRagDocumentWithProgress } from '../../documents/lib/ragClient';
+import type { UploadingFile } from '../../../documents/components/documentUploader';
+import { uploadRagDocumentWithProgress } from '../../../documents/lib/ragClient';
 import { useUploadStore } from '@/src/stores/document/uploadStore';
-import { ChatSubmitPayload } from '../types/chatTypes';
-import { ChatModel } from '../types/chatModels';
+import { ChatSubmitPayload } from '../../types/chatTypes';
+import { ChatModel } from '../../types/chatModels';
 
 interface ConversationChatInputProps {
 	onSendMessage: (payload: ChatSubmitPayload) => Promise<void>;
 	disabled?: boolean;
 	conversationId: string;
 	selectedModel: ChatModel;
-	onModelChange: Dispatch<SetStateAction<ChatModel>>;
+	onModelChange:
+		| Dispatch<SetStateAction<ChatModel>>
+		| ((nextModel: ChatModel) => void);
 }
 
 const ConversationChatInput = ({

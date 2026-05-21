@@ -1,4 +1,4 @@
-import ChatScreen from '@/src/features/chat/components/chatScreen';
+import ChatScreen from '@/src/features/chat/components/chatArea/chatScreen';
 import { ChatModel } from '@/src/features/chat/types/chatModels';
 
 type PageProps = {
