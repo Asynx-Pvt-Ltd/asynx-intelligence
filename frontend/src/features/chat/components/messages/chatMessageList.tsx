@@ -2,7 +2,8 @@
 
 import { cn } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { Check, Copy } from 'lucide-react';
 import { AttachedFile } from '@/src/features/documents/types/documentTypes';
 import { deleteRagDocuments } from '@/src/features/documents/lib/ragClient';
 import { deleteAttachedFileFromMessage } from '../../lib/chatHistory';
@@ -115,12 +116,9 @@ export default function ChatMessageList({
 								isUser ? 'justify-end' : 'justify-start',
 							)}
 						>
-							{/* Bubble wrapper */}
 							<div
 								className={cn(
 									'relative w-fit max-w-full rounded-2xl',
-									// add some padding on the right/top so the avatar
-									// doesn’t overlap the text
 									'pt-6 pr-10',
 									isUser
 										? [
@@ -135,12 +133,15 @@ export default function ChatMessageList({
 											],
 								)}
 							>
-								{/* Avatar in top-right corner of this box */}
+								{!isUser && message.content && (
+									<div className="sticky top-2 z-20 -mt-2 mb-2 flex w-full justify-end">
+										<CopyResponseButton text={message.content} />
+									</div>
+								)}
 								<div className="absolute -top-4 -left-3 h-6 w-6">
 									{isUser ? <UserMessageBubble /> : <AssisstantMessageBubble />}
 								</div>
 
-								{/* Content */}
 								{isUser ? (
 									<div className="whitespace-pre-wrap text-sm leading-relaxed sm:text-[15px]">
 										{message.content}
@@ -164,14 +165,12 @@ export default function ChatMessageList({
 									/>
 								)}
 
-								{/* File attachments */}
 								<UploadFileChip
 									message={message}
 									index={index}
 									onRemoveFile={removeUploadedFile}
 								/>
 
-								{/* Timestamp */}
 								<MessageTimestamp
 									createdAt={
 										(message as unknown as { created_at?: string }).created_at
@@ -183,6 +182,36 @@ export default function ChatMessageList({
 				})}
 			</AnimatePresence>
 		</motion.div>
+	);
+}
+
+function CopyResponseButton({ text }: { text: string }) {
+	const [copied, setCopied] = useState(false);
+
+	const handleCopy = async () => {
+		try {
+			await navigator.clipboard.writeText(text);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 1500);
+		} catch (err) {
+			console.error('Failed to copy text:', err);
+		}
+	};
+
+	return (
+		<button
+			type="button"
+			onClick={handleCopy}
+			aria-label="Copy response"
+			title={copied ? 'Copied' : 'Copy response'}
+			className={cn(
+				'inline-flex h-8 w-8 items-center justify-center rounded-lg',
+				'text-muted-foreground/70 transition hover:bg-white/10 hover:text-foreground',
+				'shrink-0',
+			)}
+		>
+			{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+		</button>
 	);
 }
 
@@ -263,7 +292,6 @@ function StructuredContent({
 	);
 }
 
-/* ── Hover timestamp ──────────────────────────────────────────── */
 function MessageTimestamp({ createdAt }: { createdAt?: string }) {
 	if (!createdAt) return null;
 	const formatted = new Date(createdAt).toLocaleTimeString([], {
@@ -291,14 +319,14 @@ function splitBodyIntoParagraphAndBullets(body: string) {
 
 	for (const line of lines) {
 		if (line.startsWith('- ')) {
-			bulletLines.push(line.slice(2)); // remove "- "
+			bulletLines.push(line.slice(2));
 		} else if (line) {
 			normalLines.push(line);
 		}
 	}
 
 	return {
-		paragraph: normalLines.join(' '), // or join with "\n\n" if you want breaks
+		paragraph: normalLines.join(' '),
 		bullets: bulletLines,
 	};
 }

@@ -2,16 +2,16 @@
 
 import ScrollToBottomButton from '@/src/components/chat/ScrollToBottomButton';
 import { useEffect, useState } from 'react';
-import { useChatScreenRefs } from '../../hooks/chatScreen/useChatScreenRefs';
-import { useChatMessages } from '../../hooks/chatScreen/useChatMessages';
-import { useChatHydration } from '../../hooks/chatScreen/useChatHydration';
-import { useChatScroll } from '../../hooks/chatScreen/useChatScroll';
-import { useChatModelSync } from '../../hooks/chatScreen/useChatModelSync';
-import { usePendingPromptInit } from '../../hooks/chatScreen/usePendingPromptInit';
-import type { ChatModel } from '../../types/chatModels';
-import ConversationChatInput from '../chatInputs/conversationChatInput';
-import { ChatSkeleton } from './ChatSkeleton';
-import { ChatContent } from './ChatContent';
+import { useChatScreenRefs } from '../hooks/chatScreen/useChatScreenRefs';
+import { useChatMessages } from '../hooks/chatScreen/useChatMessages';
+import { useChatHydration } from '../hooks/chatScreen/useChatHydration';
+import { useChatScroll } from '../hooks/chatScreen/useChatScroll';
+import { useChatModelSync } from '../hooks/chatScreen/useChatModelSync';
+import { usePendingPromptInit } from '../hooks/chatScreen/usePendingPromptInit';
+import type { ChatModel } from '../types/chatModels';
+import ConversationChatInput from '../components/chatInputs/conversationChatInput';
+import { ChatSkeleton } from '../components/chatArea/ChatSkeleton';
+import { ChatContent } from '../components/chatArea/ChatContent';
 
 export default function ChatScreen({
 	chatId,
