@@ -2,7 +2,8 @@
 
 import { cn } from '@/src/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { Check, Copy } from 'lucide-react';
 import { AttachedFile } from '@/src/features/documents/types/documentTypes';
 import { deleteRagDocuments } from '@/src/features/documents/lib/ragClient';
 import { deleteAttachedFileFromMessage } from '../../lib/chatHistory';
@@ -18,7 +19,7 @@ interface ChatMessageListProps {
 	messages: Message[];
 	isLoading: boolean;
 	streamingIndex: number | null;
-	setMessage: Dispatch<SetStateAction<Message[]>>;
+	setMessages: Dispatch<SetStateAction<Message[]>>;
 	vectorIndex: string | undefined;
 	conversationId: string;
 }
@@ -38,7 +39,7 @@ export default function ChatMessageList({
 	messages,
 	isLoading,
 	streamingIndex,
-	setMessage,
+	setMessages,
 	vectorIndex,
 	conversationId,
 }: ChatMessageListProps) {
@@ -51,7 +52,7 @@ export default function ChatMessageList({
 		index: number;
 		messageId: string;
 	}) => {
-		setMessage((prev) =>
+		setMessages((prev) =>
 			prev.map((msg, idx) =>
 				idx === index
 					? {
@@ -115,12 +116,9 @@ export default function ChatMessageList({
 								isUser ? 'justify-end' : 'justify-start',
 							)}
 						>
-							{/* Bubble wrapper */}
 							<div
 								className={cn(
 									'relative w-fit max-w-full rounded-2xl',
-									// add some padding on the right/top so the avatar
-									// doesn’t overlap the text
 									'pt-6 pr-10',
 									isUser
 										? [
@@ -135,12 +133,15 @@ export default function ChatMessageList({
 											],
 								)}
 							>
-								{/* Avatar in top-right corner of this box */}
+								{!isUser && message.content && (
+									<div className="sticky top-2 z-20 -mt-2 mb-2 flex w-full justify-end">
+										<CopyResponseButton text={message.content} />
+									</div>
+								)}
 								<div className="absolute -top-4 -left-3 h-6 w-6">
 									{isUser ? <UserMessageBubble /> : <AssisstantMessageBubble />}
 								</div>
 
-								{/* Content */}
 								{isUser ? (
 									<div className="whitespace-pre-wrap text-sm leading-relaxed sm:text-[15px]">
 										{message.content}
@@ -164,14 +165,12 @@ export default function ChatMessageList({
 									/>
 								)}
 
-								{/* File attachments */}
 								<UploadFileChip
 									message={message}
 									index={index}
 									onRemoveFile={removeUploadedFile}
 								/>
 
-								{/* Timestamp */}
 								<MessageTimestamp
 									createdAt={
 										(message as unknown as { created_at?: string }).created_at
@@ -183,6 +182,36 @@ export default function ChatMessageList({
 				})}
 			</AnimatePresence>
 		</motion.div>
+	);
+}
+
+function CopyResponseButton({ text }: { text: string }) {
+	const [copied, setCopied] = useState(false);
+
+	const handleCopy = async () => {
+		try {
+			await navigator.clipboard.writeText(text);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 1500);
+		} catch (err) {
+			console.error('Failed to copy text:', err);
+		}
+	};
+
+	return (
+		<button
+			type="button"
+			onClick={handleCopy}
+			aria-label="Copy response"
+			title={copied ? 'Copied' : 'Copy response'}
+			className={cn(
+				'inline-flex h-8 w-8 items-center justify-center rounded-lg',
+				'text-muted-foreground/70 transition hover:bg-white/10 hover:text-foreground',
+				'shrink-0',
+			)}
+		>
+			{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+		</button>
 	);
 }
 
@@ -198,36 +227,43 @@ function StructuredContent({
 		<div className="space-y-4 text-[15px]">
 			{structured.title && (
 				<h2 className="text-base sm:text-xl font-semibold text-foreground">
-					{structured.title}
+					<LinkifiedText text={structured.title} />
 				</h2>
 			)}
+
 			{structured.overview && (
-				<p className="dark:text-white/70 leading-relaxed whitespace-pre-line">
-					{structured.overview}
+				<p className="leading-relaxed whitespace-pre-line wrap-break-word dark:text-white/70">
+					<LinkifiedText text={structured.overview} />
 				</p>
 			)}
+
 			{structured.sections
 				?.filter((s) => s.heading.toLowerCase() !== 'overview')
 				.map((section) => {
 					const { paragraph, bullets } = splitBodyIntoParagraphAndBullets(
 						section.body,
 					);
+
 					return (
 						<section key={section.heading} className="space-y-1.5">
-							<h3 className="text-[16px] font-semibold text-foreground">
-								{section.heading}
+							<h3 className="text-[16px] font-semibold text-foreground wrap-break-word">
+								<LinkifiedText text={section.heading} />
 							</h3>
+
 							{paragraph && (
-								<p className="dark:text-white/70 leading-relaxed whitespace-pre-line">
-									{paragraph}
+								<p className="leading-relaxed whitespace-pre-line wrap-break-word dark:text-white/70">
+									<LinkifiedText text={paragraph} />
 								</p>
 							)}
 
 							{bullets.length > 0 && (
 								<ul className="space-y-1 pl-5 list-disc marker:text-primary/50">
 									{bullets.map((b, i) => (
-										<li key={i} className="dark:text-white/70 leading-relaxed">
-											{b}
+										<li
+											key={i}
+											className="leading-relaxed wrap-break-word dark:text-white/70"
+										>
+											<LinkifiedText text={b} />
 										</li>
 									))}
 								</ul>
@@ -235,15 +271,20 @@ function StructuredContent({
 						</section>
 					);
 				})}
+
 			{structured.bullets && structured.bullets.length > 0 && (
 				<ul className="space-y-1 pl-5 list-disc marker:text-primary/50">
 					{structured.bullets.map((b, i) => (
-						<li key={i} className="text-muted-foreground leading-relaxed">
-							{b}
+						<li
+							key={i}
+							className="leading-relaxed wrap-break-word text-muted-foreground"
+						>
+							<LinkifiedText text={b} />
 						</li>
 					))}
 				</ul>
 			)}
+
 			{isStreaming && (
 				<span className="cursor-blink ml-0.5 inline-block" aria-hidden />
 			)}
@@ -251,7 +292,6 @@ function StructuredContent({
 	);
 }
 
-/* ── Hover timestamp ──────────────────────────────────────────── */
 function MessageTimestamp({ createdAt }: { createdAt?: string }) {
 	if (!createdAt) return null;
 	const formatted = new Date(createdAt).toLocaleTimeString([], {
@@ -279,14 +319,45 @@ function splitBodyIntoParagraphAndBullets(body: string) {
 
 	for (const line of lines) {
 		if (line.startsWith('- ')) {
-			bulletLines.push(line.slice(2)); // remove "- "
+			bulletLines.push(line.slice(2));
 		} else if (line) {
 			normalLines.push(line);
 		}
 	}
 
 	return {
-		paragraph: normalLines.join(' '), // or join with "\n\n" if you want breaks
+		paragraph: normalLines.join(' '),
 		bullets: bulletLines,
 	};
+}
+
+function LinkifiedText({ text }: { text: string }) {
+	const urlRegex = /((?:https?:\/\/|www\.)[^\s<]+[^<.,:;"')\]\s])/gi;
+	const parts = text.split(urlRegex);
+
+	return (
+		<>
+			{parts.map((part, i) => {
+				if (urlRegex.test(part)) {
+					urlRegex.lastIndex = 0;
+					const href = part.startsWith('http') ? part : `https://${part}`;
+
+					return (
+						<a
+							key={i}
+							href={href}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="break-all font-medium text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary"
+						>
+							{part}
+						</a>
+					);
+				}
+
+				urlRegex.lastIndex = 0;
+				return <span key={i}>{part}</span>;
+			})}
+		</>
+	);
 }

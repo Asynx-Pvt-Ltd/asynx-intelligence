@@ -4,7 +4,7 @@ import { cn } from '@/src/lib/utils';
 import { useChatSidebarStore } from '@/src/stores/chat/chatSidebarStore';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import ChatNavbar from '@/src/features/chat/components/chatNavbar';
+import ChatNavbar from '@/src/features/chat/components/chatArea/chatNavbar';
 import HomeNavbar from '@/src/features/home/components/homeNavbar';
 import Sidebar from '@/src/features/home/components/sidebar';
 import SettingsDrawer from '@/src/components/chat/SettingsDrawer';

@@ -1,32 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import ChatInput from './chatInput';
-import type { UploadingFile } from '../../documents/components/documentUploader';
-import { uploadRagDocumentWithProgress } from '../../documents/lib/ragClient';
+import type { UploadingFile } from '../../../documents/components/documentUploader';
+import { uploadRagDocumentWithProgress } from '../../../documents/lib/ragClient';
 import { useUploadStore } from '@/src/stores/document/uploadStore';
-import { ChatSubmitPayload } from '../types/chatTypes';
+import { ChatSubmitPayload } from '../../types/chatTypes';
+import { ChatModel } from '../../types/chatModels';
 
 interface ConversationChatInputProps {
-	onSendMessage: ({ prompt, files }: ChatSubmitPayload) => Promise<void>;
+	onSendMessage: (payload: ChatSubmitPayload) => Promise<void>;
 	disabled?: boolean;
 	conversationId: string;
+	selectedModel: ChatModel;
+	onModelChange:
+		| Dispatch<SetStateAction<ChatModel>>
+		| ((nextModel: ChatModel) => void);
 }
 
 const ConversationChatInput = ({
 	onSendMessage,
 	disabled = false,
 	conversationId,
+	selectedModel,
+	onModelChange,
 }: ConversationChatInputProps) => {
 	const [isSubmitting, setIsSubmitting] = useState(false);
-
 	const addFile = useUploadStore((s) => s.addFile);
 	const updateFile = useUploadStore((s) => s.updateFile);
 
-	const handleSubmit = async ({ prompt, files }: ChatSubmitPayload) => {
+	const handleSubmit = async ({ prompt, files, model }: ChatSubmitPayload) => {
 		try {
 			setIsSubmitting(true);
-			await onSendMessage({ prompt, files });
+			await onSendMessage({ prompt, files, model });
 		} catch (error) {
 			console.error('Failed to send message:', error);
 			throw error;
@@ -35,8 +41,12 @@ const ConversationChatInput = ({
 		}
 	};
 
-	const handleChatSubmit = async ({ prompt, files }: ChatSubmitPayload) => {
-		await handleSubmit({ prompt, files });
+	const handleChatSubmit = async ({
+		prompt,
+		files,
+		model,
+	}: ChatSubmitPayload) => {
+		await handleSubmit({ prompt, files, model });
 	};
 
 	const handleFilesSelected = async (selectedFiles: File[]) => {
@@ -97,6 +107,8 @@ const ConversationChatInput = ({
 		<ChatInput
 			onSubmit={handleChatSubmit}
 			onFilesSelected={handleFilesSelected}
+			selectedModel={selectedModel}
+			onModelChange={onModelChange}
 			isSubmitting={isSubmitting}
 			disabled={disabled}
 			placeholder="Ask a follow-up"

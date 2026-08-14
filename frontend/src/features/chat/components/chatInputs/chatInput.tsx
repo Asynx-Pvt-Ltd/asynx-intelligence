@@ -7,6 +7,8 @@ import {
 	useRef,
 	useState,
 	useEffect,
+	Dispatch,
+	SetStateAction,
 } from 'react';
 import { ArrowUp, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,14 +17,17 @@ import { useUploadStore } from '@/src/stores/document/uploadStore';
 import {
 	DocumentUploader,
 	type UploadingFile,
-} from '../../documents/components/documentUploader';
-import UploadFileList from '../../documents/components/uploadFileList';
-import { deleteRagDocuments } from '../../documents/lib/ragClient';
+} from '../../../documents/components/documentUploader';
+import UploadFileList from '../../../documents/components/uploadFileList';
+import { deleteRagDocuments } from '../../../documents/lib/ragClient';
 import { Textarea } from '@/src/components/ui/textarea';
+import type { ChatModel } from '../../types/chatModels';
+import ModelSelector from '@/src/components/chat/ModelSelector';
 
 type ChatSubmitPayload = {
 	prompt: string;
 	files: UploadingFile[];
+	model: ChatModel;
 };
 
 type SendState = 'idle' | 'sending' | 'done';
@@ -30,6 +35,10 @@ type SendState = 'idle' | 'sending' | 'done';
 interface ChatInputProps {
 	onSubmit: (payload: ChatSubmitPayload) => Promise<void> | void;
 	onFilesSelected: (files: File[]) => void;
+	selectedModel: ChatModel;
+	onModelChange:
+		| Dispatch<SetStateAction<ChatModel>>
+		| ((nextModel: ChatModel) => void);
 	placeholder?: string;
 	disabled?: boolean;
 	isSubmitting?: boolean;
@@ -38,13 +47,15 @@ interface ChatInputProps {
 }
 
 const MAX_LINES = 5;
-const LINE_HEIGHT = 24; // px
-const MIN_HEIGHT = 40; // px
+const LINE_HEIGHT = 24;
+const MIN_HEIGHT = 40;
 
 export default function ChatInput({
 	onSubmit,
-	placeholder = 'Ask anything…',
 	onFilesSelected,
+	selectedModel,
+	onModelChange,
+	placeholder = 'Ask anything…',
 	disabled = false,
 	isSubmitting = false,
 	defaultValue = '',
@@ -63,6 +74,7 @@ export default function ChatInput({
 		() => files.some((f) => f.status === 'uploading'),
 		[files],
 	);
+
 	const hasErroredFile = useMemo(
 		() => files.some((f) => f.status === 'error'),
 		[files],
@@ -75,7 +87,6 @@ export default function ChatInput({
 		!hasErroredFile &&
 		trimmed.length > 0;
 
-	/* Auto-resize textarea */
 	const resizeTextarea = () => {
 		const el = textareaRef.current;
 		if (!el) return;
@@ -87,17 +98,24 @@ export default function ChatInput({
 		resizeTextarea();
 	}, [prompt]);
 
-	/* Remove file with cleanup */
+	useEffect(() => {
+		if (defaultValue) {
+			setPrompt(defaultValue);
+		}
+	}, [defaultValue]);
+
 	const removeFileContext = async (file: UploadingFile) => {
 		removeFile(file.id);
+
 		if (!file.documentIds || !file.vectorIndex) return;
+
 		try {
 			await deleteRagDocuments({
 				vector_index: file.vectorIndex,
 				document_ids: file.documentIds,
 			});
 		} catch {
-			/* ignore */
+			// ignore cleanup failure
 		}
 	};
 
@@ -108,14 +126,19 @@ export default function ChatInput({
 		const value = trimmed;
 		setPrompt('');
 
-		// Reset textarea height
 		if (textareaRef.current) {
 			textareaRef.current.style.height = `${MIN_HEIGHT}px`;
 		}
 
 		setSendState('sending');
+
 		try {
-			await onSubmit({ prompt: value, files });
+			await onSubmit({
+				prompt: value,
+				files,
+				model: selectedModel,
+			});
+
 			setSendState('done');
 			setTimeout(() => setSendState('idle'), 1200);
 		} catch {
@@ -132,6 +155,7 @@ export default function ChatInput({
 			e.preventDefault();
 			void handleSubmit();
 		}
+
 		if (e.key === 'Enter' && modKey) {
 			e.preventDefault();
 			void handleSubmit();
@@ -140,27 +164,19 @@ export default function ChatInput({
 
 	const isSending = isSubmitting || sendState === 'sending';
 
-	useEffect(() => {
-		if (defaultValue) {
-			setPrompt(defaultValue);
-		}
-	}, [defaultValue]);
-
 	return (
 		<form onSubmit={handleSubmit} className={cn('w-full', className)}>
 			<div
 				className={cn(
-					'relative w-full rounded-2xl',
+					'relative w-full rounded-xl',
 					'bg-chat-input border border-chat-input-border',
 					'shadow-float',
-					'backdrop-blur-xl',
-					'transition-[border-color,box-shadow] duration-200',
-					'focus-within:border-primary/30 focus-within:shadow-glow-sm',
+					'transition-[border-color] duration-150',
+					'focus-within:border-primary/40',
 				)}
 			>
-				{/* Uploaded file list */}
 				{files.length > 0 && (
-					<div className="px-4 pt-3 pb-0">
+					<div className="px-1 pt-3 pb-0">
 						<UploadFileList
 							files={files}
 							onRemoveFile={removeFileContext}
@@ -169,7 +185,6 @@ export default function ChatInput({
 					</div>
 				)}
 
-				{/* Textarea */}
 				<div className="flex items-end gap-3 px-4 pt-3 pb-1">
 					<Textarea
 						ref={textareaRef}
@@ -194,9 +209,7 @@ export default function ChatInput({
 					/>
 				</div>
 
-				{/* Bottom action bar */}
 				<div className="flex items-center justify-between px-3 pb-2.5 pt-0">
-					{/* Left: attach + tools */}
 					<div className="flex items-center gap-1">
 						<DocumentUploader
 							files={files}
@@ -208,9 +221,13 @@ export default function ChatInput({
 						/>
 					</div>
 
-					{/* Right: count + hint + send */}
 					<div className="flex items-center gap-2">
-						{/* Character count */}
+						<ModelSelector
+							value={selectedModel}
+							onChange={onModelChange}
+							disabled={disabled || isSending}
+						/>
+
 						<AnimatePresence>
 							{showCount && (
 								<motion.span
@@ -229,12 +246,10 @@ export default function ChatInput({
 							)}
 						</AnimatePresence>
 
-						{/* Keyboard hint */}
-						<span className="hidden sm:inline text-[11px] text-muted-foreground/35 select-none">
+						<span className="hidden select-none text-[11px] text-muted-foreground/35 sm:inline">
 							↵ to send
 						</span>
 
-						{/* Send button */}
 						<motion.button
 							type="submit"
 							disabled={!canSubmit && sendState !== 'done'}
@@ -245,10 +260,7 @@ export default function ChatInput({
 								'relative flex h-8 w-8 items-center justify-center rounded-xl',
 								'transition-all duration-200',
 								canSubmit || sendState === 'done'
-									? [
-											'bg-primary text-white',
-											'shadow-glow-sm hover:shadow-glow',
-										]
+									? ['bg-primary text-primary-foreground', 'hover:opacity-90']
 									: ['bg-muted text-muted-foreground/40', 'cursor-not-allowed'],
 							)}
 						>

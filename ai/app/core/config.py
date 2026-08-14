@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     POSTGRES_URI: str
 
     OPENAI_API_KEY: str
+    ANTHROPIC_API_KEY: str | None = None
+    XAI_API_KEY: str | None = None
+    
     LLAMA_CLOUD_API_KEY: Optional[str] = None
 
     FRONTEND_HOST: str = "http://localhost:3000"

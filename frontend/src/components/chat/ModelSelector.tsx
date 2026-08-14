@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown, Zap, Brain, Sparkles } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
@@ -9,136 +8,90 @@ import {
 	DropdownMenuItem,
 } from '@/src/components/ui/dropdown-menu';
 import { cn } from '@/src/lib/utils';
-
-export interface ModelOption {
-	id: string;
-	name: string;
-	label: string;
-	badge: string;
-	badgeVariant: 'default' | 'fast' | 'power';
-	latency: string;
-}
-
-const MODELS: ModelOption[] = [
-	{
-		id: 'claude-sonnet-4-6',
-		name: 'Sonnet 4.6',
-		label: 'claude-sonnet-4-6',
-		badge: 'Default',
-		badgeVariant: 'default',
-		latency: '~1.2s',
-	},
-	{
-		id: 'claude-haiku-4-5',
-		name: 'Haiku 4.5',
-		label: 'claude-haiku-4-5',
-		badge: 'Fast',
-		badgeVariant: 'fast',
-		latency: '~0.4s',
-	},
-	{
-		id: 'claude-opus-4-7',
-		name: 'Opus 4.7',
-		label: 'claude-opus-4-7',
-		badge: 'Powerful',
-		badgeVariant: 'power',
-		latency: '~3.1s',
-	},
-];
-
-const BadgeIcon = ({ variant }: { variant: ModelOption['badgeVariant'] }) => {
-	if (variant === 'fast') return <Zap className="h-3 w-3" />;
-	if (variant === 'power') return <Brain className="h-3 w-3" />;
-	return <Sparkles className="h-3 w-3" />;
-};
-
-const badgeStyles: Record<ModelOption['badgeVariant'], string> = {
-	default:
-		'bg-primary/10 text-primary border border-primary/20',
-	fast:
-		'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-	power:
-		'bg-violet-500/10 text-violet-400 border border-violet-500/20',
-};
+import {
+	CHAT_MODELS,
+	ChatModelId,
+	FLAT_CHAT_MODELS,
+} from '@/src/constants/chat/chatModels.constants';
+import { Dispatch, SetStateAction } from 'react';
+import { ChatModel } from '@/src/features/chat/types/chatModels';
 
 interface ModelSelectorProps {
+	value: ChatModelId;
+	onChange:
+		| Dispatch<SetStateAction<ChatModel>>
+		| ((nextModel: ChatModel) => void);
 	className?: string;
-	onModelChange?: (model: ModelOption) => void;
+	disabled?: boolean;
 }
 
 export default function ModelSelector({
+	value,
+	onChange,
 	className,
-	onModelChange,
+	disabled = false,
 }: ModelSelectorProps) {
-	const [selected, setSelected] = useState<ModelOption>(MODELS[0]);
-
-	const handleSelect = (model: ModelOption) => {
-		setSelected(model);
-		onModelChange?.(model);
-	};
+	const selected =
+		FLAT_CHAT_MODELS.find((model) => model.value === value) ??
+		FLAT_CHAT_MODELS[0];
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
+			<DropdownMenuTrigger asChild disabled={disabled}>
 				<button
+					type="button"
 					className={cn(
-						'flex items-center gap-1.5 rounded-lg px-2.5 py-1.5',
-						'text-xs font-medium text-muted-foreground',
-						'hover:text-foreground hover:bg-muted/60',
-						'transition-all duration-150',
-						'border border-transparent hover:border-border',
+						'flex items-center gap-1 rounded-md px-2 py-1',
+						'text-xs text-muted-foreground',
+						'hover:text-foreground hover:bg-muted/50',
+						'transition-colors duration-150',
 						'outline-none focus-visible:ring-1 focus-visible:ring-ring',
+						'disabled:cursor-not-allowed disabled:opacity-40',
 						className,
 					)}
 					aria-label="Select AI model"
 				>
-					<span
-						className={cn(
-							'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tracking-wide',
-							badgeStyles[selected.badgeVariant],
-						)}
-					>
-						<BadgeIcon variant={selected.badgeVariant} />
-						{selected.badge}
+					<span className="hidden sm:inline max-w-[120px] truncate">
+						{selected.label}
 					</span>
-					<span className="hidden sm:inline">{selected.name}</span>
-					<ChevronDown className="h-3 w-3 opacity-60" />
+					<ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
 				</button>
 			</DropdownMenuTrigger>
 
 			<DropdownMenuContent
 				align="end"
 				sideOffset={6}
-				className="w-52 rounded-xl border border-border bg-popover p-1 shadow-lg"
+				className="w-56 rounded-xl border border-border bg-popover p-1 shadow-lg"
 			>
-				{MODELS.map((model) => (
-					<DropdownMenuItem
-						key={model.id}
-						onClick={() => handleSelect(model)}
-						className={cn(
-							'flex items-center justify-between rounded-lg px-3 py-2.5 cursor-pointer',
-							'text-sm transition-colors',
-							selected.id === model.id
-								? 'bg-primary/10 text-foreground'
-								: 'text-muted-foreground hover:text-foreground',
+				{CHAT_MODELS.map((group) => (
+					<div key={group.provider}>
+						{group.options.length > 0 && (
+							<p className="px-3 pt-2 pb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
+								{group.provider}
+							</p>
 						)}
-					>
-						<div className="flex items-center gap-2.5">
-							<span
-								className={cn(
-									'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold',
-									badgeStyles[model.badgeVariant],
-								)}
-							>
-								<BadgeIcon variant={model.badgeVariant} />
-								{model.badge}
-							</span>
-							<span className="font-medium">{model.name}</span>
-						</div>
-						<span className="text-[10px] tabular-nums text-muted-foreground/60">
-							{model.latency}
-						</span>
-					</DropdownMenuItem>
+						{group.options.map((model) => {
+							const isSelected = model.value === selected.value;
+							return (
+								<DropdownMenuItem
+									key={model.value}
+									onClick={() => onChange(model.value)}
+									className={cn(
+										'flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer',
+										'text-sm transition-colors',
+										isSelected
+											? 'bg-primary/8 text-foreground font-medium'
+											: 'text-muted-foreground hover:text-foreground',
+									)}
+								>
+									<span>{model.label}</span>
+									{isSelected && (
+										<span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+									)}
+								</DropdownMenuItem>
+							);
+						})}
+					</div>
 				))}
 			</DropdownMenuContent>
 		</DropdownMenu>

@@ -1,5 +1,6 @@
 import { AttachedFile } from '@/src/features/documents/types/documentTypes';
 import { UploadingFile } from '../../documents/components/documentUploader';
+import { ChatModel } from './chatModels';
 
 export type MessageRole = 'system' | 'user' | 'assistant';
 
@@ -29,6 +30,7 @@ export interface ChatResponse {
 export interface ChatSubmitPayload {
 	prompt: string;
 	files: UploadingFile[];
+	model: ChatModel;
 }
 
 export interface StreamTokenChunk {

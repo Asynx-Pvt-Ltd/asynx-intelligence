@@ -28,7 +28,10 @@ import {
 	AlertDialogDescription,
 } from '@/src/components/ui/alert-dialog';
 import { Input } from '@/src/components/ui/input';
-import { updateConversation, deleteConversation } from '../lib/chatHistory';
+import {
+	updateConversation,
+	deleteConversation,
+} from '../../features/chat/lib/chatHistory';
 import { useRouter } from 'next/navigation';
 import { useChatStore } from '@/src/stores/chat/chatStore';
 import { cn } from '@/src/lib/utils';
