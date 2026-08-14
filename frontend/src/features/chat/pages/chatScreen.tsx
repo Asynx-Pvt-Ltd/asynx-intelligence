@@ -1,17 +1,17 @@
 'use client';
 
-import ScrollToBottomButton from '@/src/components/chat/ScrollToBottomButton';
-import { useEffect, useState } from 'react';
+import { AssistantRuntimeProvider } from '@assistant-ui/react';
+import { useEffect } from 'react';
 import { useChatScreenRefs } from '../hooks/chatScreen/useChatScreenRefs';
 import { useChatMessages } from '../hooks/chatScreen/useChatMessages';
 import { useChatHydration } from '../hooks/chatScreen/useChatHydration';
-import { useChatScroll } from '../hooks/chatScreen/useChatScroll';
 import { useChatModelSync } from '../hooks/chatScreen/useChatModelSync';
 import { usePendingPromptInit } from '../hooks/chatScreen/usePendingPromptInit';
+import { useAsynxRuntime } from '../hooks/chatScreen/useAsynxRuntime';
+import { useUploadStore } from '@/src/stores/document/uploadStore';
 import type { ChatModel } from '../types/chatModels';
-import ConversationChatInput from '../components/chatInputs/conversationChatInput';
 import { ChatSkeleton } from '../components/chatArea/ChatSkeleton';
-import { ChatContent } from '../components/chatArea/ChatContent';
+import AsynxThread from '../components/thread/AsynxThread';
 
 export default function ChatScreen({
 	chatId,
@@ -20,34 +20,19 @@ export default function ChatScreen({
 	chatId: string;
 	model: ChatModel;
 }) {
-	const [showScrollBtn, setShowScrollBtn] = useState(false);
-
-	const {
-		bottomRef,
-		initializedRef,
-		scrollContainerRef,
-		streamRunIdRef,
-		messagesRef,
-	} = useChatScreenRefs({ messages: [], setShowScrollBtn });
+	const { streamRunIdRef, messagesRef, initializedRef } = useChatScreenRefs({
+		messages: [],
+		setShowScrollBtn: () => {},
+	});
 
 	const { messages, setMessages, sendMessage, isLoading, streamingIndex } =
-		useChatMessages({
-			chatId,
-			streamRunIdRef,
-			messagesRef,
-		});
+		useChatMessages({ chatId, streamRunIdRef, messagesRef });
 
-	const { isHydrating, vectorIndex } = useChatHydration({
-		chatId,
-		setMessages,
-	});
-
-	const { scrollToBottom } = useChatScroll({
-		bottomRef,
-		scrollContainerRef,
-	});
+	const { isHydrating } = useChatHydration({ chatId, setMessages });
 
 	const { selectedModel, handleModelChange } = useChatModelSync({ model });
+
+	const files = useUploadStore((s) => s.files);
 
 	usePendingPromptInit({
 		isHydrating,
@@ -56,9 +41,17 @@ export default function ChatScreen({
 		initializedRef,
 	});
 
-	useEffect(() => {
-		scrollToBottom();
-	}, [messages, scrollToBottom]);
+	// The runtime is used exclusively by AsynxComposer (ComposerPrimitive)
+	// Message rendering is done directly from state in AsynxThread
+	const runtime = useAsynxRuntime({
+		messages,
+		setMessages,
+		isLoading,
+		streamingIndex,
+		sendMessage,
+		selectedModel,
+		files,
+	});
 
 	useEffect(() => {
 		initializedRef.current = false;
@@ -75,49 +68,16 @@ export default function ChatScreen({
 	}
 
 	return (
-		<div className="relative flex h-full flex-col">
-			<div
-				ref={scrollContainerRef}
-				className="flex-1 overflow-y-auto scrollbar-thin"
-			>
-				<div className="mx-auto w-full max-w-3xl px-4 py-6">
-					<ChatContent
-						chatId={chatId}
-						messages={messages}
-						isLoading={isLoading}
-						streamingIndex={streamingIndex}
-						vectorIndex={vectorIndex}
-						setMessages={setMessages}
-						onSelectPrompt={async (p) =>
-							await sendMessage({
-								prompt: p,
-								files: [],
-								model: selectedModel,
-							})
-						}
-						bottomRef={bottomRef}
-					/>
-				</div>
-			</div>
-
-			<div className="absolute bottom-24 right-6 z-20">
-				<ScrollToBottomButton
-					visible={showScrollBtn}
-					onClick={() => scrollToBottom('smooth')}
-				/>
-			</div>
-
-			<div className="sticky bottom-0 z-10 bg-linear-to-t from-chat-screen via-chat-screen/90 to-transparent px-4 pb-4 pt-2">
-				<div className="mx-auto max-w-3xl">
-					<ConversationChatInput
-						onSendMessage={sendMessage}
-						disabled={isHydrating || isLoading}
-						conversationId={chatId}
-						selectedModel={selectedModel}
-						onModelChange={handleModelChange}
-					/>
-				</div>
-			</div>
-		</div>
+		<AssistantRuntimeProvider runtime={runtime}>
+			<AsynxThread
+				messages={messages}
+				isLoading={isLoading}
+				streamingIndex={streamingIndex}
+				selectedModel={selectedModel}
+				onModelChange={handleModelChange}
+				conversationId={chatId}
+				disabled={isHydrating}
+			/>
+		</AssistantRuntimeProvider>
 	);
 }

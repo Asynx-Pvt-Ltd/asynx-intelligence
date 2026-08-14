@@ -10,15 +10,14 @@ export default function ThinkingIndicator({
 	return (
 		<div
 			role="status"
-			aria-label="AI is thinking"
-			className={cn('flex items-center gap-1 py-1', className)}
+			aria-label="Generating response"
+			className={cn('flex items-center gap-1.5', className)}
 		>
-			<span>Thinking</span>
 			{[0, 1, 2].map((i) => (
 				<span
 					key={i}
-					className={cn('typing-dot h-1.5 w-1.5 rounded-full bg-primary/60')}
-					style={{ animationDelay: `${i * 0.16}s` }}
+					className="typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground/40"
+					style={{ animationDelay: `${i * 0.18}s` }}
 					aria-hidden
 				/>
 			))}

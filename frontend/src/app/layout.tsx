@@ -1,6 +1,6 @@
 import { cn } from '@/src/lib/utils';
 import { ClerkProvider } from '@clerk/nextjs';
-import { DM_Serif_Display, Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono } from 'next/font/google';
 import type React from 'react';
 import { ThemeProvider } from '../components/providers/themeProvider';
 import './globals.css';
@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-	title: 'Asynx Intelligence — Enterprise AI',
-	description: 'Enterprise AI assistant powered by Asynx Intelligence',
+	title: 'Aria — AI Assistant',
+	description: 'Your intelligent work assistant by Asynx Engineering',
 };
 
 export default async function RootLayout({
