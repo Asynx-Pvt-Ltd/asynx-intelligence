@@ -168,12 +168,11 @@ export default function ChatInput({
 		<form onSubmit={handleSubmit} className={cn('w-full', className)}>
 			<div
 				className={cn(
-					'relative w-full rounded-2xl',
+					'relative w-full rounded-xl',
 					'bg-chat-input border border-chat-input-border',
 					'shadow-float',
-					'backdrop-blur-xl',
-					'transition-[border-color,box-shadow] duration-200',
-					'focus-within:border-primary/30 focus-within:shadow-glow-sm',
+					'transition-[border-color] duration-150',
+					'focus-within:border-primary/40',
 				)}
 			>
 				{files.length > 0 && (
@@ -261,10 +260,7 @@ export default function ChatInput({
 								'relative flex h-8 w-8 items-center justify-center rounded-xl',
 								'transition-all duration-200',
 								canSubmit || sendState === 'done'
-									? [
-											'bg-primary text-white',
-											'shadow-glow-sm hover:shadow-glow',
-										]
+									? ['bg-primary text-primary-foreground', 'hover:opacity-90']
 									: ['bg-muted text-muted-foreground/40', 'cursor-not-allowed'],
 							)}
 						>

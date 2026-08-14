@@ -8,8 +8,7 @@ import {
 import { cn } from '@/src/lib/utils';
 import { useChatStore } from '@/src/stores/chat/chatStore';
 import { useUploadStore } from '@/src/stores/document/uploadStore';
-import { motion } from 'framer-motion';
-import { BarChart2, FileText, MessageSquare, Sparkles } from 'lucide-react';
+import { BarChart2, FileText, MessageSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { uploadRagDocumentWithProgress } from '../../../documents/lib/ragClient';
@@ -138,45 +137,26 @@ const StarterChatInput = () => {
 	};
 
 	return (
-		<div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-10">
+		<div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8">
 			{/* Hero */}
-			<motion.div
-				initial={{ opacity: 0, y: 20 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-				className="flex flex-col items-center gap-5 text-center"
-			>
-				<div className="relative">
-					<div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 shadow-glow">
-						<Logo imageStyles="w-12 h-12 object-contain" />
-					</div>
-					<span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary shadow-glow-sm pulse-ring">
-						<Sparkles className="h-3 w-3 text-white" />
-					</span>
-				</div>
+			<div className="flex flex-col items-center gap-4 text-center animate-fade-up">
+				<Logo
+					className="border border-border w-12 h-12 rounded-2xl p-2 bg-card shadow-sm"
+					imageStyles="w-full h-full object-contain"
+				/>
 
-				<div className="space-y-2">
-					<h1 className="font-heading text-3xl sm:text-4xl font-normal tracking-tight text-foreground">
-						Enterprise AI Assistant
+				<div className="space-y-1.5">
+					<h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+						Aria
 					</h1>
-					<p className="text-base text-muted-foreground max-w-sm">
-						Analyze documents, synthesize knowledge, and accelerate your
-						workflow.
+					<p className="text-sm text-muted-foreground max-w-xs">
+						Your intelligent work assistant. Ask anything, analyze documents, and get answers instantly.
 					</p>
 				</div>
-			</motion.div>
+			</div>
 
 			{/* Input */}
-			<motion.div
-				initial={{ opacity: 0, y: 12 }}
-				animate={{ opacity: 1, y: 0 }}
-				transition={{
-					duration: 0.4,
-					delay: 0.1,
-					ease: [0.25, 0.46, 0.45, 0.94],
-				}}
-				className="w-full"
-			>
+			<div className="w-full animate-fade-up" style={{ animationDelay: '60ms' }}>
 				<ChatInput
 					onSubmit={handleCreateConversation}
 					onFilesSelected={handleFilesSelected}
@@ -186,44 +166,35 @@ const StarterChatInput = () => {
 					placeholder="Ask anything…"
 					defaultValue={defaultPrompt}
 				/>
-			</motion.div>
+			</div>
 
 			{/* Suggested prompts */}
-			<motion.div
-				initial={{ opacity: 0 }}
-				animate={{ opacity: 1 }}
-				transition={{ duration: 0.4, delay: 0.2 }}
-				className="flex flex-wrap justify-center gap-2"
+			<div
+				className="flex flex-wrap justify-center gap-1.5 animate-fade-up"
+				style={{ animationDelay: '120ms' }}
 			>
-				{SUGGESTED_PROMPTS.map((item, i) => {
+				{SUGGESTED_PROMPTS.map((item) => {
 					const Icon = item.icon;
 					return (
-						<motion.button
+						<button
 							key={item.label}
-							initial={{ opacity: 0, y: 6 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{
-								duration: 0.3,
-								delay: 0.25 + i * 0.06,
-								ease: [0.25, 0.46, 0.45, 0.94],
-							}}
 							onClick={() => setDefaultPrompt(item.prompt)}
 							disabled={isSubmitting}
 							className={cn(
-								'group flex items-center gap-2 rounded-xl px-3.5 py-2.5 cursor-pointer',
-								'border border-border bg-card/50 backdrop-blur-sm',
-								'text-sm text-muted-foreground',
-								'hover:border-primary/30 hover:bg-primary/5 hover:text-foreground',
-								'transition-all duration-200 shadow-sm hover:shadow-glow-sm',
+								'flex items-center gap-2 rounded-lg px-3 py-2 cursor-pointer',
+								'border border-border bg-card',
+								'text-[13px] text-muted-foreground',
+								'hover:border-primary/30 hover:bg-primary-subtle hover:text-foreground',
+								'transition-colors duration-150',
 								'disabled:pointer-events-none disabled:opacity-50',
 							)}
 						>
-							<Icon className="h-3.5 w-3.5 shrink-0 text-primary/60 group-hover:text-primary transition-colors" />
+							<Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
 							<span>{item.label}</span>
-						</motion.button>
+						</button>
 					);
 				})}
-			</motion.div>
+			</div>
 		</div>
 	);
 };

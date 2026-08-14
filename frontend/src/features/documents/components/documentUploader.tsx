@@ -2,7 +2,7 @@
 
 import { Button } from '@/src/components/ui/button';
 import { cn } from '@/src/lib/utils';
-import { Plus } from 'lucide-react';
+import { Paperclip } from 'lucide-react';
 import {
 	useId,
 	useRef,
@@ -120,14 +120,13 @@ export function DocumentUploader({
 					onClick={openFilePicker}
 					aria-label="Attach file"
 					className={cn(
-						'h-9 w-9 rounded-full border border-border bg-muted/40 text-muted-foreground',
-						'hover:bg-muted hover:text-foreground hover:border-border',
-						'active:scale-95 transition-all duration-150',
-						isDragging &&
-							'border-primary bg-primary/10 text-primary',
+						'h-8 w-8 rounded-lg text-muted-foreground/70',
+						'hover:bg-muted hover:text-foreground',
+						'transition-colors duration-150',
+						isDragging && 'text-primary bg-primary/10',
 					)}
 				>
-					<Plus className="h-4 w-4" />
+					<Paperclip className="h-4 w-4" />
 				</Button>
 			</div>
 		</div>
